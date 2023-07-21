@@ -10,13 +10,6 @@
 #     sf-data -o Account            # query only Account data
 #     sf-data -o Account -v         # save in temporary file and open in `vd` (works only in conjunction with `-d` option
 #
-# EXAMPLES
-#
-#   Compare Users of two Orgs:
-#
-#     sf-data -u b2bdev1 -d .data1 -o User
-#     sf-data -u b2bdev2 -d .data2 -o User
-#     daff --www .data1/User.csv .data2/User.csv
 
 yesno() {
   echo ""
@@ -142,6 +135,7 @@ if [ $object == "all" ]; then
     | sed /CronTrigger/d \
     | sed /EntityDefinition/d \
     | sed /OauthToken/d \
+    | sed /UserLicense/d \
     > ${listfile}
 else
   echo ${object} > ${listfile}
