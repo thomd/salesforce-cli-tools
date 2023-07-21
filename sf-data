@@ -137,6 +137,11 @@ if [ $object == "all" ]; then
     | sed /PermissionSetTabSetting/d \
     | sed /PicklistValueInfo/d \
     | sed /PlatformAction/d \
+    | sed /AuthSession/d \
+    | sed /BackgroundOperation/d \
+    | sed /CronTrigger/d \
+    | sed /EntityDefinition/d \
+    | sed /OauthToken/d \
     > ${listfile}
 else
   echo ${object} > ${listfile}
@@ -154,6 +159,7 @@ while read obj; do
     | sed /LastActivityDate/d \
     | sed /LastViewedDate/d \
     | sed /LastReferencedDate/d \
+    | sed /MV_DaysSinceCreated__c/d \
     | paste -sd, -)
   sfdx data query -q "SELECT ${fields} FROM ${obj}" -o ${org} -r csv > ${target}/${obj}.csv
     wc -l ${target}/${obj}.csv | awk '{if($1 == "0" || $1 == "1"){ print " " $2 ": \033[31mempty" } else { print " " $2 ": \033[32m" $1-1 " records" } }'
