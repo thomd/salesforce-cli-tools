@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+
+alias=${1:-"scratch1"}
+duration=${2:-"1"}
+yesno() {
+  echo ""
+  read -p "$1 [Y/n] " response
+  [[ $response == "n" || $response == "N" ]] && exit 1
+}
+yesno "Create $(tput setaf 1)${duration}$(tput sgr0) day Scratch Org $(tput setaf 1)${alias}$(tput sgr0) ?"
+
+sfdx project generate -x -n ${alias} && cd ${alias}
+cat config/project-scratch-def.json | jq '. += {"language": "en_US"}' > tmp; mv tmp config/project-scratch-def.json
+npm install
+sfdx org create scratch -f config/project-scratch-def.json -y ${duration} -v DevHub -a ${alias}
+sfdx config set target-org=${alias}
+sfdx force user password generate
+sfdx org display
+sfdx org open
+
+USERNAME=$(sfdx org display --json | jq -r '.result.signupUsername')
+cat <<EOF > config/user-def.json
+{
+    "Username": "`echo $USERNAME`.standard",
+    "FirstName": "User",
+    "LastName": "Standard User",
+    "Email": "thomas.duerr@arvato-scs.com",
+    "Alias": "SUser",
+    "TimeZoneSidKey": "America/Denver",
+    "LocaleSidKey": "en_US",
+    "EmailEncodingKey": "UTF-8",
+    "LanguageLocaleKey": "en_US",
+    "profileName": "Standard User",
+    "permsets": [],
+    "generatePassword": true
+}
+EOF
+sfdx force user create --setalias stduser --definitionfile config/user-def.json
+sfdx force user display -o `echo $USERNAME`.standard
+sfdx force user list
+sfdx org list
+echo "\n  $(tput setaf 2)--> cd into '${alias}' and start working ...$(tput sgr0)"

@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+target=${1:-"b2bdev1"}
+yesno() {
+  echo ""
+  read -p "$1 [Y/n] " response
+  [[ $response == "n" || $response == "N" ]] && exit 1
+}
+yesno "Deploy to $(tput setaf 1)${target}$(tput sgr0) ?"
+echo -e "\n  $(tput setaf 2)Build Frontend CSS$(tput sgr0) ..."
+(cd frontend && npm run frontend:build >/dev/null)
+echo "  $(tput setaf 2)Deploy$(tput sgr0) ..."
+sfdx force source deploy -x manifest/package.xml --target-org ${target} >/dev/null
+echo "  $(tput setaf 2)Publish$(tput sgr0) ..."
+sfdx community publish -n Mediverse -o ${target} >/dev/null
+git restore force-app/main/default/staticresources/b2bTheme.css
+echo "  $(tput setaf 2)Finish$(tput sgr0): https://mediverse--${target}.sandbox.my.site.com"

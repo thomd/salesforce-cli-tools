@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+org=${1:-"b2bdev1"}
+
+yesno() {
+  echo ""
+  read -p "$1 [Y/n] " response
+  [[ $response == "n" || $response == "N" ]] && exit 1
+}
+yesno " Retrieve all metadata from org $(tput setaf 1)${org}$(tput sgr0) ?"
+
+#sfdx org list metadata-types -o "$org" | jq -r '.metadataObjects[].xmlName' > metadata.names
+total=$(cat metadata.names | wc -l | tr -s " ")
+echo $total
+
+while read -r t; do
+  echo $t;
+  sleep 0.1;
+  #sfdx force source retrieve -m $t >/dev/null 2>&1;
+done < <(cat metadata.names) | tqdm --total $total --update_to --null
+
+#rm metadata.names

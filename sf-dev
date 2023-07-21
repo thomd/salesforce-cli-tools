@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+[ -d "frontend" ] && nodemon -w "frontend" -e "scss" -x "(cd frontend && npm run frontend:build) && sfdx force source deploy -m StaticResource:b2bTheme" &
+nodemon -w "force-app/main/default/classes/" -e "cls,apxc,xml" -x "sfdx force source deploy -m ApexClass:*" &
+nodemon -w "force-app/main/default/pages/" -e "page,vfp,xml" -x "sfdx force source deploy -m ApexPage:*" &
+nodemon -w "force-app/main/default/triggers/" -e "trigger,xml" -x "sfdx force source deploy -m ApexClass:*" &
+nodemon -w "force-app/main/default/lwc/" -e "html,js,xml" -x "sfdx force source deploy -m LightningComponentBundle:*" &
+wait
+

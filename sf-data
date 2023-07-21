@@ -1,0 +1,164 @@
+#!/usr/bin/env bash
+
+#
+# USAGE
+#
+#     sf-data                       # query all data from default org and save in '.data' folder
+#     sf-data -u b2bdev             # query from 'b2bdev' org
+#     sf-data -d data               # query all data from default org and save in 'data' folder
+#
+#     sf-data -o Account            # query only Account data
+#     sf-data -o Account -v         # save in temporary file and open in `vd` (works only in conjunction with `-d` option
+#
+# EXAMPLES
+#
+#   Compare Users of two Orgs:
+#
+#     sf-data -u b2bdev1 -d .data1 -o User
+#     sf-data -u b2bdev2 -d .data2 -o User
+#     daff --www .data1/User.csv .data2/User.csv
+
+yesno() {
+  echo ""
+  read -p "$1 [Y/n] " response
+  [[ $response == "n" || $response == "N" ]] && exit 1
+}
+
+usage() {
+  cat <<EOF
+
+ $(tput setaf 0)OPTIONS$(tput sgr0)
+
+    -u ORG
+    -d FOLDER
+    -o OBJECT
+    -v
+EOF
+  exit 0
+}
+
+org="b2bdev1"
+target=".data"
+object="all"
+open=false
+listfile="object.names"
+
+while [ $# -gt 0 ]; do
+  case $1 in
+    -u)
+      shift
+      org=$1
+      ;;
+    -d)
+      shift
+      target=$1
+      ;;
+    -o)
+      shift
+      object=$1
+      ;;
+    -v|--vd)
+      open=true
+      ;;
+    -h|--help)
+      cat $0 | sed -n '/^#/p' | sed '/^##/d' | sed 1d | sed 's/^#/ /g' \
+        | perl -pe "s/ #(.*)$/$(tput setaf 0)\1$(tput sgr 0)/" \
+        | perl -pe "s/(USAGE|EXAMPLES)/$(tput setaf 8)\1$(tput sgr0)/"
+      exit 1
+      ;;
+    *)
+      ;;
+  esac
+  shift
+done
+
+yesno " Fetch $(tput setaf 2)${object}$(tput sgr0) data from $(tput setaf 1)${org}$(tput sgr0) ?"
+
+if [ ! $object == "all" ] && [ $open == true ]; then
+  echo ""
+  target=$(mktemp)
+  sfdx data query -q "SELECT `sfdx force schema sobject describe -s $object | jq -r '.fields[].name' | paste -sd, -` FROM $object" -o ${org} -r csv > "${target}"
+  vd "${target}"
+  exit 0
+fi
+
+if [ $object == "all" ]; then
+  sfdx sobject list -s all \
+    | sed /osf/d \
+    | sed /Apex/d \
+    | sed /SetupAuditTrail/d \
+    | sed /UserLogin/d \
+    | sed /FieldPermissions/d \
+    | sed /Event$/d \
+    | sed /__e$/d \
+    | sed /Vote/d \
+    | sed /Access$/d \
+    | sed /SiteDetail/d \
+    | sed /SearchLayout/d \
+    | sed /^Salesforce/d \
+    | sed /^Relationship/d \
+    | sed /RelatedListDefinition/d \
+    | sed /RelatedListColumnDefinition/d \
+    | sed /QuoteTemplateRichTextData/d \
+    | sed /ProcessInstanceHistory/d \
+    | sed /OpenActivity/d \
+    | sed /NoteAndAttachment/d \
+    | sed /NetworkUserHistoryRecent/d \
+    | sed /^Name$/d \
+    | sed /LookedUpFromActivity/d \
+    | sed /LogoutEventStream/d \
+    | sed /ListViewChartInstance/d \
+    | sed /IdeaComment/d \
+    | sed /IconDefinition/d \
+    | sed /FolderedContentDocument/d \
+    | sed /^Flow/d \
+    | sed /^Feed/d \
+    | sed /^Field/d \
+    | sed /FlexQueueItem/d \
+    | sed /EntityParticle/d \
+    | sed /EmailStatus/d \
+    | sed /^Data/d \
+    | sed /ContentFolderMember/d \
+    | sed /ContentFolderItem/d \
+    | sed /ContentDocumentLink/d \
+    | sed /ContentBody/d \
+    | sed /CombinedAttachment/d \
+    | sed /ColorDefinition/d \
+    | sed /^Attached/d \
+    | sed /AsyncOperationStatus/d \
+    | sed /AppTabMember/d \
+    | sed /AggregateResult/d \
+    | sed /ActivityHistory/d \
+    | sed /^AI/d \
+    | sed /OrgLifecycleNotification/d \
+    | sed /^OutgoingEmail/d \
+    | sed /OwnedContentDocument/d \
+    | sed /OwnerChangeOptionInfo/d \
+    | sed /PermissionSetTabSetting/d \
+    | sed /PicklistValueInfo/d \
+    | sed /PlatformAction/d \
+    > ${listfile}
+else
+  echo ${object} > ${listfile}
+fi
+
+total=$(cat ${listfile} | wc -l | tr -d ' ')
+mkdir -p ${target}
+c=0
+while read obj; do
+  c=$((c+1))
+  echo -e "\n $(tput setaf 8)[${c}/${total}]$(tput sgr0) $(tput setaf 4)${obj}$(tput sgr0):"
+  fields=$(sfdx force schema sobject describe -s ${obj} -o ${org} | jq -r '.fields[].name' \
+    | sed /MV_Minutes_Since_Modified__c/d \
+    | sed /MV_Last_login_days__c/d \
+    | sed /LastActivityDate/d \
+    | sed /LastViewedDate/d \
+    | sed /LastReferencedDate/d \
+    | paste -sd, -)
+  sfdx data query -q "SELECT ${fields} FROM ${obj}" -o ${org} -r csv > ${target}/${obj}.csv
+    wc -l ${target}/${obj}.csv | awk '{if($1 == "0" || $1 == "1"){ print " " $2 ": \033[31mempty" } else { print " " $2 ": \033[32m" $1-1 " records" } }'
+    awk 'NR == 1; NR > 1 { print $0 | "sort" }' ${target}/${obj}.csv > ${target}/temp; mv ${target}/temp ${target}/${obj}.csv
+    find ${target}/${obj}.csv -type f -size -2c -delete
+done < <(cat ${listfile})
+
+rm ${listfile}
