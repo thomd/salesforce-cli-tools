@@ -2,10 +2,10 @@
 
 ## Install
 
-Set symlinks into `~/bin/`
+Set symlinks into `~/bin/` folder:
 
     make
 
-or set custom `bin` folder
+or symlink into custom `bin` folder:
 
     make BINDIR=/usr/local/bin/
