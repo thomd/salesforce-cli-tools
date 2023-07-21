@@ -23,6 +23,6 @@ This tool uses several non standard CLI tools:
 
 ### Compare Accounts between Orgs
 
-    sf-data -u b2bdev1 -d .data1 -o Account
-    sf-data -u b2bdev2 -d .data2 -o Account
+    sf-data -u org1 -d .data1 -o Account
+    sf-data -u org2 -d .data2 -o Account
     daff --www .data1/Account.csv .data2/Account.csv
