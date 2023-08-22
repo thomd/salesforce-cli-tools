@@ -4,11 +4,11 @@
 # USAGE
 #
 #     sf-data                       # query all data from default org and save in '.data' folder
-#     sf-data -u b2bdev             # query from 'b2bdev' org
+#     sf-data -u alias              # query from 'alias' org [default: b2bdev2]
 #     sf-data -d data               # query all data from default org and save in 'data' folder
 #
 #     sf-data -o Account            # query only Account data
-#     sf-data -o Account -v         # save in temporary file and open in `vd` (works only in conjunction with `-d` option
+#     sf-data -o Account -v         # save in temporary file and open in `vd`
 #
 
 yesno() {
@@ -30,7 +30,7 @@ EOF
   exit 0
 }
 
-org="b2bdev1"
+org="b2bdev2"
 target=".data"
 object="all"
 open=false
