@@ -39,4 +39,4 @@ sfdx force user create --setalias stduser --definitionfile config/user-def.json
 sfdx force user display -o `echo $USERNAME`.standard
 sfdx force user list
 sfdx org list
-echo "\n  $(tput setaf 2)--> cd into '${alias}' and start working ...$(tput sgr0)"
+echo -e "\n  $(tput setaf 2)--> cd into '${alias}' and start working ...$(tput sgr0)"
