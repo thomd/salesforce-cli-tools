@@ -3,12 +3,12 @@
 #
 # USAGE
 #
-#     sf-data                       # query all data from default org and save in `.data` folder
-#     sf-data -o ALIAS              # query from ALIAS org [default: b2bdev2]
-#     sf-data -d DIR                # query all data from default org and save in DIR folder
+#     sf-data                           # query all data from default org and save in `.data` folder
+#     sf-data -o ALIAS                  # query from ALIAS org [default: b2bdev2]
+#     sf-data -d DIR                    # query all data from default org and save in DIR folder
 #
-#     sf-data -s OBJ_1,OBJ_2        # query objects OBJ
-#     sf-data -v OBJ                # query Object OBJ and open in Visidata
+#     sf-data -s OBJ_1 -s OBJ_2         # query objects OBJ
+#     sf-data -v OBJ                    # query Object OBJ and open in Visidata
 #
 
 yesno() {
@@ -19,7 +19,7 @@ yesno() {
 
 org="b2bdev2"
 target=".data"
-object="all"
+object=""
 visidata=false
 listfile="object.names"
 
@@ -35,7 +35,11 @@ while [ $# -gt 0 ]; do
       ;;
     -s)
       shift
-      object=$1
+      if [[ $object == "" ]]; then
+        object=$1
+      else
+        object="${object},${1}"
+      fi
       ;;
     -v)
       shift
@@ -54,6 +58,9 @@ while [ $# -gt 0 ]; do
   shift
 done
 
+echo $object | tr -d ' ' | tr ',' '\n'
+exit 0
+
 yesno " Fetch $(tput setaf 2)${object}$(tput sgr0) data from $(tput setaf 1)${org}$(tput sgr0) ?"
 
 if [ $visidata == true ]; then
@@ -64,8 +71,8 @@ if [ $visidata == true ]; then
   exit 0
 fi
 
-if [ $object == "all" ]; then
-  sfdx sobject list -s all \
+if [ $object == "" ]; then
+  sfdx sobject list -o ${org} -s all \
     | sed /osf/d \
     | sed /Apex/d \
     | sed /SetupAuditTrail/d \
