@@ -4,10 +4,10 @@
 # USAGE
 #
 #     sf-data                       # query all data from default org and save in `.data` folder
-#     sf-data -u ALIAS              # query from ALIAS org [default: b2bdev2]
+#     sf-data -o ALIAS              # query from ALIAS org [default: b2bdev2]
 #     sf-data -d DIR                # query all data from default org and save in DIR folder
 #
-#     sf-data -o OBJ_1,OBJ_2        # query objects OBJ
+#     sf-data -s OBJ_1,OBJ_2        # query objects OBJ
 #     sf-data -v OBJ                # query Object OBJ and open in Visidata
 #
 
@@ -25,7 +25,7 @@ listfile="object.names"
 
 while [ $# -gt 0 ]; do
   case $1 in
-    -u)
+    -o)
       shift
       org=$1
       ;;
@@ -33,7 +33,7 @@ while [ $# -gt 0 ]; do
       shift
       target=$1
       ;;
-    -o)
+    -s)
       shift
       object=$1
       ;;
