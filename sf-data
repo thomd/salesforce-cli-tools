@@ -58,9 +58,6 @@ while [ $# -gt 0 ]; do
   shift
 done
 
-echo $object | tr -d ' ' | tr ',' '\n'
-exit 0
-
 yesno " Fetch $(tput setaf 2)${object}$(tput sgr0) data from $(tput setaf 1)${org}$(tput sgr0) ?"
 
 if [ $visidata == true ]; then

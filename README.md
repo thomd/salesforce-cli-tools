@@ -4,11 +4,12 @@
 
 Set symlinks to `~/bin/` folder:
 
-    make
+    make link
 
 or symlink to custom folder:
 
-    make BINDIR=/usr/local/bin/
+    make link BINDIR=/usr/local/bin/
+    make link COMPLETIONSDIR=/etc/bash_completions.d
 
 ## Dependencies
 
@@ -23,10 +24,10 @@ This tool uses several non standard CLI tools:
 
 ### Compare Accounts between Orgs
 
-    sf-data -u org1 -d .data1 -o Account
-    sf-data -u org2 -d .data2 -o Account
+    sf-data -o org1 -d .data1 -s Account
+    sf-data -o org2 -d .data2 -s Account
     daff --www .data1/Account.csv .data2/Account.csv
 
 ### Inspect Account Data
 
-    sf-data -o Account -v
+    sf-data -v Account

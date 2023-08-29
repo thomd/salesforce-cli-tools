@@ -6,11 +6,11 @@
 
 _sfdata_completions() {
     local cur prev opts orgs
-    cache="sf-data.sobjects"
+    cache="/tmp/sf-data.sobjects"
     COMPREPLY=()
     cur="${COMP_WORDS[COMP_CWORD]}"
     prev="${COMP_WORDS[COMP_CWORD-1]}"
-    opts="-a -b -c"
+    opts="-o -d -s -v -h"
 
     if [ ! -f "${cache}" ]; then
       sfdx sobject list -o b2bdev1 -s all | paste -sd' ' - > ${cache}
@@ -18,7 +18,7 @@ _sfdata_completions() {
     orgs=$(cat ${cache})
 
     case "${prev}" in
-        -b)
+        -s|-v)
             COMPREPLY=($(compgen -W "${orgs}" -- ${cur}))
             return 0
             ;;
