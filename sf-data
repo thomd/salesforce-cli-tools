@@ -3,12 +3,12 @@
 #
 # USAGE
 #
-#     sf-data                       # query all data from default org and save in '.data' folder
-#     sf-data -u alias              # query from 'alias' org [default: b2bdev2]
-#     sf-data -d data               # query all data from default org and save in 'data' folder
+#     sf-data                       # query all data from default org and save in `.data` folder
+#     sf-data -u ALIAS              # query from ALIAS org [default: b2bdev2]
+#     sf-data -d DIR                # query all data from default org and save in DIR folder
 #
-#     sf-data -o Account            # query only Account data
-#     sf-data -o Account -v         # save in temporary file and open in `vd`
+#     sf-data -o OBJ_1,OBJ_2        # query objects OBJ
+#     sf-data -v OBJ                # query Object OBJ and open in Visidata
 #
 
 yesno() {
@@ -17,23 +17,10 @@ yesno() {
   [[ $response == "n" || $response == "N" ]] && exit 1
 }
 
-usage() {
-  cat <<EOF
-
- $(tput setaf 0)OPTIONS$(tput sgr0)
-
-    -u ORG
-    -d FOLDER
-    -o OBJECT
-    -v
-EOF
-  exit 0
-}
-
 org="b2bdev2"
 target=".data"
 object="all"
-open=false
+visidata=false
 listfile="object.names"
 
 while [ $# -gt 0 ]; do
@@ -50,8 +37,10 @@ while [ $# -gt 0 ]; do
       shift
       object=$1
       ;;
-    -v|--vd)
-      open=true
+    -v)
+      shift
+      object=$1
+      visidata=true
       ;;
     -h|--help)
       cat $0 | sed -n '/^#/p' | sed '/^##/d' | sed 1d | sed 's/^#/ /g' \
@@ -67,10 +56,10 @@ done
 
 yesno " Fetch $(tput setaf 2)${object}$(tput sgr0) data from $(tput setaf 1)${org}$(tput sgr0) ?"
 
-if [ ! $object == "all" ] && [ $open == true ]; then
+if [ $visidata == true ]; then
   echo ""
   target=$(mktemp)
-  sfdx data query -q "SELECT `sfdx force schema sobject describe -s $object | jq -r '.fields[].name' | paste -sd, -` FROM $object" -o ${org} -r csv > "${target}"
+  sfdx data query -q "SELECT `sfdx force schema sobject describe -o ${org} -s ${object} | jq -r '.fields[].name' | paste -sd, -` FROM ${object}" -o ${org} -r csv > "${target}"
   vd "${target}"
   exit 0
 fi
@@ -138,7 +127,7 @@ if [ $object == "all" ]; then
     | sed /UserLicense/d \
     > ${listfile}
 else
-  echo ${object} > ${listfile}
+  echo ${object} | tr -d ' ' | tr ',' '\n' > ${listfile}
 fi
 
 total=$(cat ${listfile} | wc -l | tr -d ' ')
