@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-target=${1:-"b2bdev1"}
+target=${1:-"b2bdev2"}
 yesno() {
   echo ""
   read -p "$1 [Y/n] " response
