@@ -6,10 +6,10 @@ Set symlinks to `~/bin/` folder:
 
     make
 
-or symlink to custom folder:
+Alternatively symlink to custom folders:
 
-    make link BINDIR=/usr/local/bin/
-    make link COMPLETIONSDIR=/etc/bash_completions.d
+    make BINDIR=/usr/local/bin/
+    make COMPLETIONSDIR=/etc/bash_completions.d
 
 ## Dependencies
 
