@@ -1,16 +1,11 @@
 #!/usr/bin/env bash
 
-# to prune cached sobjects:
-#
-#     make prune
-
 _sfdata_completions() {
-    local cur prev opts orgs
+    local cur prev orgs
     cache="/tmp/sf-data.sobjects"
     COMPREPLY=()
     cur="${COMP_WORDS[COMP_CWORD]}"
     prev="${COMP_WORDS[COMP_CWORD-1]}"
-    opts="-o -d -s -v -h"
 
     if [ ! -f "${cache}" ]; then
       sfdx sobject list -o b2bdev1 -s all | paste -sd' ' - > ${cache}
@@ -20,10 +15,6 @@ _sfdata_completions() {
     case "${prev}" in
         -s|-v)
             COMPREPLY=($(compgen -W "${orgs}" -- ${cur}))
-            return 0
-            ;;
-        *)
-            COMPREPLY=($(compgen -W "${opts}" -- ${cur}))
             return 0
             ;;
     esac
