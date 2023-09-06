@@ -2,17 +2,18 @@
 
 alias=${1:-"scratch1"}
 duration=${2:-"1"}
+devhub=${3:-"DevHub"}
 yesno() {
   echo ""
   read -p "$1 [Y/n] " response
   [[ $response == "n" || $response == "N" ]] && exit 1
 }
-yesno "Create $(tput setaf 1)${duration}$(tput sgr0) day Scratch Org $(tput setaf 1)${alias}$(tput sgr0) ?"
+yesno "Create a $(tput setaf 2)${duration} day$(tput sgr0) Scratch Org $(tput setaf 1)${alias}$(tput sgr0) from $(tput setaf 1)${devhub}$(tput sgr0) ?"
 
 sfdx project generate -x -n ${alias} && cd ${alias}
 cat config/project-scratch-def.json | jq '. += {"language": "en_US"}' > tmp; mv tmp config/project-scratch-def.json
 npm install
-sfdx org create scratch -f config/project-scratch-def.json -y ${duration} -v DevHub -a ${alias}
+sfdx org create scratch -f config/project-scratch-def.json -y ${duration} -v ${devhub} -a ${alias}
 sfdx config set target-org=${alias}
 sfdx force user password generate
 sfdx org display
