@@ -7,7 +7,7 @@
 #     sf-data -o ALIAS                  # query from ALIAS org [default: b2bdev2]
 #     sf-data -d DIR                    # save data in DIR folder [default: .data]
 #
-#     sf-data -s OBJ_1 -s OBJ_2         # query object OBJ
+#     sf-data -s OBJ_1 -s OBJ_2         # query objects OBJ_1 and OBJ_2 and save in DIR
 #     sf-data -v OBJ                    # query Object OBJ and open in Visidata
 #
 #
