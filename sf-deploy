@@ -9,8 +9,12 @@ yesno "Deploy to $(tput setaf 1)${target}$(tput sgr0) ?"
 echo -e "\n  $(tput setaf 2)Build Frontend CSS$(tput sgr0) ..."
 (cd frontend && npm run frontend:build >/dev/null)
 echo "  $(tput setaf 2)Deploy$(tput sgr0) ..."
+# TODO: update sfdx command
+# TODO: display deployment-errors in red if deployment did not finish
 sfdx force source deploy -x manifest/package.xml --target-org ${target} >/dev/null
 echo "  $(tput setaf 2)Publish$(tput sgr0) ..."
+# TODO: get Mediverse1 name via SOQL from 'Site' object
 sfdx community publish -n Mediverse -o ${target} >/dev/null
 git restore force-app/main/default/staticresources/b2bTheme.css
+# TODO: get URL via SOQL from 'Domain' object
 echo "  $(tput setaf 2)Finish$(tput sgr0): https://mediverse--${target}.sandbox.my.site.com"
