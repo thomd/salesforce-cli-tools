@@ -76,7 +76,7 @@ if [ $visidata == true ]; then
 fi
 
 # this is an opinionated list of sobjects which are either not of interest or do not support queries
-if [ $object == "" ]; then
+if [[ $object == "" ]]; then
   sfdx sobject list -o ${org} -s all \
     | sed /osf/d \
     | sed /Apex/d \
