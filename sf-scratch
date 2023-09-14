@@ -10,6 +10,8 @@ yesno() {
 }
 yesno "Create a $(tput setaf 2)${duration} day$(tput sgr0) Scratch Org $(tput setaf 1)${alias}$(tput sgr0) from $(tput setaf 1)${devhub}$(tput sgr0) ?"
 
+[[ -f sfdx-project.json ]] && echo -e >&2 "$(tput setaf 1)\n You are already inside a Salesforce project!$(tput sgr0)" && exit 1
+
 sfdx project generate -x -n ${alias} && cd ${alias}
 cat config/project-scratch-def.json | jq '. += {"language": "en_US"}' > tmp; mv tmp config/project-scratch-def.json
 npm install
