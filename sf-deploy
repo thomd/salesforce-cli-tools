@@ -1,20 +1,66 @@
 #!/usr/bin/env bash
-target=${1:-"b2bdev2"}
+
+#
+# USAGE
+#
+#     sf-deploy -o ALIAS            # deploy package based to ALIAS org [default: b2bdev2]
+#     sf-deploy -c                  # validate deployment with unit tests
+#
+
 yesno() {
   echo ""
   read -p "$1 [Y/n] " response
   [[ $response == "n" || $response == "N" ]] && exit 1
 }
-yesno "Deploy to $(tput setaf 1)${target}$(tput sgr0) ?"
-echo -e "\n  $(tput setaf 2)Build Frontend CSS$(tput sgr0) ..."
-(cd frontend && npm run frontend:build >/dev/null)
-echo "  $(tput setaf 2)Deploy$(tput sgr0) ..."
-# TODO: update sfdx command
-# TODO: display deployment-errors in red if deployment did not finish
-sfdx force source deploy -x manifest/package.xml --target-org ${target} >/dev/null
-echo "  $(tput setaf 2)Publish$(tput sgr0) ..."
-# TODO: get Mediverse1 name via SOQL from 'Site' object
-sfdx community publish -n Mediverse -o ${target} >/dev/null
-git restore force-app/main/default/staticresources/b2bTheme.css
-# TODO: get URL via SOQL from 'Domain' object
-echo "  $(tput setaf 2)Finish$(tput sgr0): https://mediverse--${target}.sandbox.my.site.com"
+
+org="b2bdev2"
+validate="false"
+
+while [ $# -gt 0 ]; do
+  case $1 in
+    -o)
+      shift
+      org=$1
+      ;;
+    -c)
+      validate="true"
+      ;;
+    -h|--help)
+      cat $0 | sed -n '/^#/p' | sed '/^##/d' | sed 1d | sed 's/^#/ /g' \
+        | perl -pe "s/ #(.*)$/$(tput setaf 0)\1$(tput sgr 0)/" \
+        | perl -pe "s/(USAGE|EXAMPLES)/$(tput setaf 8)\1$(tput sgr0)/"
+      exit 1
+      ;;
+    *)
+      ;;
+  esac
+  shift
+done
+
+if [[ $validate == "true" ]]; then
+  yesno " Verify Deployment on $(tput setaf 1)${org}$(tput sgr0) ?"
+  echo -e "\n $(tput setaf 2)Verify Deployment$(tput sgr0) ..."
+  sfdx project deploy validate -x manifest/package.xml -l RunSpecifiedTests -t `cat scripts/test/unit-test-list.txt | sed s/,$// | awk '{ printf(" -t %s", $0) }'` -o ${org} > result.tmp
+  cat result.tmp | cut -c -$(tput cols)
+  deployid=$(cat result.tmp | grep "Deploy ID" | perl -pe 's/Deploy ID: (.*)/\1/')
+  deployurl="https://mediverse--b2bdev1.sandbox.lightning.force.com/lightning/setup/DeployStatus/page?address=/changemgmt/monitorDeploymentsDetails.apexp?asyncId=${deployid}"
+  echo -e "˜n $(tput setaf 1)Deployment Status:$(tput sgr0) ${deployurl}"
+  rm result.tmp
+else
+  yesno " Deploy to $(tput setaf 1)${org}$(tput sgr0) ?"
+  echo -e "\n $(tput setaf 2)Build Frontend CSS$(tput sgr0) ..."
+  (cd frontend && npm run frontend:build >/dev/null)
+  echo " $(tput setaf 2)Deploy$(tput sgr0) ..."
+  sfdx project deploy start -x manifest/package.xml -o ${org} > /dev/null
+  if [[ $? == 0 ]]; then
+    echo " $(tput setaf 2)Publish$(tput sgr0) ..."
+    name=$(sfdx data query -o ${org} -q "SELECT Name FROM Site WHERE UrlPathPrefix=''" --json | jq -r '.result.records[].Name')
+    sfdx community publish -n ${name} -o ${org} >/dev/null
+    git restore force-app/main/default/staticresources/b2bTheme.css
+    domain=$(sfdx data query -o ${org} -q "SELECT Domain FROM Domain WHERE HttpsOption='CommunityAlt'" --json | jq -r '.result.records[].Domain')
+    echo " $(tput setaf 2)Finish$(tput sgr0): ${domain}"
+  else
+    echo " $(tput setaf 1)Deployment Error$(tput sgr0)"
+  fi
+fi
+
