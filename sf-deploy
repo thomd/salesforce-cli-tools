@@ -42,17 +42,21 @@ while [ $# -gt 0 ]; do
 done
 
 showresult() {
-  cat ${result} | sed 1,2d | perl -pe "s/(Component Failures \[\d+\])$/ $(tput setaf 1)\1$(tput sgr 0)/" | cut -c -$(tput cols)
+  if [[ $validate == "true" ]]; then
+    tail -n 9 ${result} | cut -c -$(tput cols)
+  else
+    cat ${result} | sed 1,2d | perl -pe "s/(Component Failures \[\d+\])$/ $(tput setaf 1)\1$(tput sgr 0)/" | cut -c -$(tput cols)
+  fi
   deployid=$(cat ${result} | grep "Deploy ID" | perl -pe 's/Deploy ID: (.*)/\1/')
   deployurl="https://${orgname}--${1}.sandbox.lightning.force.com/lightning/setup/DeployStatus/page?address=/changemgmt/monitorDeploymentsDetails.apexp?asyncId=${deployid}"
-  echo -e " $(tput setaf 2)Deployment Status:$(tput sgr0)\n  ${deployurl}"
+  echo -e "\n $(tput setaf 2)Deployment Status:$(tput sgr0)\n  ${deployurl}"
 }
 
 if [[ $validate == "true" ]]; then
   yesno " Verify Deployment on $(tput setaf 1)${org}$(tput sgr0) ?"
   echo -e "\n $(tput setaf 2)Verify Deployment$(tput sgr0) ..."
   sfdx project deploy validate -x manifest/package.xml -l RunSpecifiedTests -t `cat scripts/test/unit-test-list.txt | sed s/,$// | awk '{ printf(" -t %s", $0) }'` -o ${org} > ${result}
-  showresult ${org}
+  showresult ${org} ${validate}
 else
   yesno " Deploy to $(tput setaf 1)${org}$(tput sgr0) ?"
   echo -e "\n $(tput setaf 2)Build Frontend CSS$(tput sgr0) ..."
@@ -66,7 +70,7 @@ else
     domain=$(sfdx data query -o ${org} -q "SELECT Domain FROM Domain WHERE HttpsOption='CommunityAlt'" --json | jq -r '.result.records[].Domain')
     echo " $(tput setaf 2)Finish$(tput sgr0): ${domain}"
   else
-    showresult ${org}
+    showresult ${org} ${validate}
   fi
   git restore force-app/main/default/staticresources/b2bTheme.css
 fi
