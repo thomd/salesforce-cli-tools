@@ -43,7 +43,7 @@ done
 
 showresult() {
   if [[ $validate == "true" ]]; then
-    tail -n 9 ${result} | cut -c -$(tput cols)
+    tail -n 9 ${result} | perl -pe "s/(Successfully validated the deployment)/ $(tput setaf 2)\1$(tput sgr 0)/" | cut -c -$(tput cols)
   else
     cat ${result} | sed 1,2d | perl -pe "s/(Component Failures \[\d+\])$/ $(tput setaf 1)\1$(tput sgr 0)/" | cut -c -$(tput cols)
   fi
