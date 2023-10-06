@@ -42,10 +42,10 @@ while [ $# -gt 0 ]; do
 done
 
 showresult() {
-  cat ${result} | sed 1,2d | perl -pe "s/(Component Failures \[\d+\])$/$(tput setaf 1)\1$(tput sgr 0)/" | cut -c -$(tput cols)
+  cat ${result} | sed 1,2d | perl -pe "s/(Component Failures \[\d+\])$/ $(tput setaf 1)\1$(tput sgr 0)/" | cut -c -$(tput cols)
   deployid=$(cat ${result} | grep "Deploy ID" | perl -pe 's/Deploy ID: (.*)/\1/')
   deployurl="https://${orgname}--${1}.sandbox.lightning.force.com/lightning/setup/DeployStatus/page?address=/changemgmt/monitorDeploymentsDetails.apexp?asyncId=${deployid}"
-  echo -e "\n $(tput setaf 2)Deployment Status:$(tput sgr0)\n   ${deployurl}"
+  echo -e " $(tput setaf 2)Deployment Status:$(tput sgr0)\n  ${deployurl}"
 }
 
 if [[ $validate == "true" ]]; then
@@ -63,10 +63,10 @@ else
     echo " $(tput setaf 2)Publish$(tput sgr0) ..."
     name=$(sfdx data query -o ${org} -q "SELECT Name FROM Site WHERE UrlPathPrefix=''" --json | jq -r '.result.records[].Name')
     sfdx community publish -n ${name} -o ${org} >/dev/null
-    git restore force-app/main/default/staticresources/b2bTheme.css
     domain=$(sfdx data query -o ${org} -q "SELECT Domain FROM Domain WHERE HttpsOption='CommunityAlt'" --json | jq -r '.result.records[].Domain')
     echo " $(tput setaf 2)Finish$(tput sgr0): ${domain}"
   else
     showresult ${org}
   fi
+  git restore force-app/main/default/staticresources/b2bTheme.css
 fi
