@@ -1,26 +1,29 @@
 #!/usr/bin/env bash
 
 #
-# extract all records of a given set of csv files which have a relation with a specific object <id> down to the given leven <n>
+# given set of csv files (e.g. by using `sf-data`), extract all records related to a object id
 #
 # USAGE
 #
-#     sf-rel ID                        # extract record relations for ID
-#     sf-rel -l N                      # extract down to level N [default: 1]
+#     sf-rel <Id>                               # extract records related to Id
+#     sf-rel -l 2                               # extract down to level 2 [default: 1]
+#
 #
 # NOTES
 #
-#     fd -I -e orig -X mv {} {.}       # restore original files
+#     fd -e orig -x mv {} {.}                   # restore original csv files
+#
+#
+# EXAMPLES
+#
+#     sf-data -s Account -s User -s Contact     # download data into current directory
+#     sf-rel 0018E000027VckFQAS                 # extract records related to the account-id
 #
 
-yesno() {
-  echo ""
-  read -p "$1 [Y/n] " response
-  [[ $response == "n" || $response == "N" ]] && exit 1
-}
-
 level=1
-id=000
+id=000000000000000000
+ids=''
+rel_ids=$(mktemp)
 
 while [ $# -gt 0 ]; do
   case $1 in
@@ -46,31 +49,38 @@ if [ $id == '000' ]; then
   exit 1
 fi
 
-echo Level: $level
-echo Id:    $id
-
 ## backup
 while read f; do
-  cp "$f" "${f}.orig"
+  [ ! -f "${f}.orig" ] && cp "$f" "${f}.orig"
 done < <(fd -I -e csv)
 
-## remove some columns
+## remove some columns we are not interested in
 while read f; do
-  echo " $(tput setaf 0)${f}$(tput sgr 0)"
-  csvcut -C "OwnerId","CreatedById","LastModifiedById" "$f" > temp
-  mv temp "$f"
+  #echo " $(tput setaf 4)${f}$(tput sgr 0)"
+  cols=("OwnerId" "CreatedById" "LastModifiedById" "RecordTypeId" "ProfileId")
+  for col in ${cols[@]}
+  do
+    csvcut -n "$f" | grep $col > /dev/null
+    if [ $? == 0 ]; then
+      csvcut -C "$col" "$f" > temp
+      mv temp "$f"
+    fi
+  done
 done < <(fd -I -e csv)
 
 ## extract all IDs down to the given level
-while read f; do
-  echo " $(tput setaf 0)${f}$(tput sgr 0)"
-  cat "$f" | awk -v id=$id '$0 ~ id{print $0}' | tr ',' '\n' | perl -ne 'print if /^[0-9a-zA-Z]{18}/'
-done < <(fd -I -e csv)
+if [ $level == 2 ]; then
+  while read f; do
+    cat "$f" | awk -v id=$id '$0 ~ id {print $0}' | tr ',' '\n' | perl -ne 'print if /^[0-9a-zA-Z]{18}$/' >> ${rel_ids}
+  done < <(fd -I -e csv)
+  ids=$(cat ${rel_ids} | sort | uniq | tr '\n' '|')
+  ids=${ids%|}
+else
+  ids=${id}
+fi
 
-## extract
+## extract related records from the available csv files
 while read f; do
-  #echo " $(tput setaf 0)${f}$(tput sgr 0)"
-  cat "$f" | awk -v id=$id '$0 ~ id || NR==1{print $0}' > temp
+  cat "$f" | awk -v id=$ids '$0 ~ id || NR==1{print $0}' > temp
   mv temp "$f"
 done < <(fd -I -e csv)
-
