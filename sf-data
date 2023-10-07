@@ -128,6 +128,17 @@ if [[ $object == "" ]]; then
     | sed /^Incident/d \
     | sed /^Forecasting/d \
     | sed /^Location/d \
+    | sed /^Quick/d \
+    | sed /^Quote/d \
+    | sed /^Scorecard/d \
+    | sed /^SocialPost/d \
+    | sed /^Stamp/d \
+    | sed /^TableauHostMapping/d \
+    | sed /^WorkBadge/d \
+    | sed /^WorkOrder/d \
+    | sed /^WorkPlan/d \
+    | sed /^WorkStep/d \
+    | sed /^Reputation/d \
     | sed /OrgLifecycleNotification/d \
     | sed /^OutgoingEmail/d \
     | sed /OwnedContentDocument/d \
@@ -141,6 +152,7 @@ if [[ $object == "" ]]; then
     | sed /EntityDefinition/d \
     | sed /OauthToken/d \
     | sed /UserLicense/d \
+    | sed /^smartlists__/d \
     > ${listfile}
 else
   echo ${object} | tr -d ' ' | tr ',' '\n' > ${listfile}
