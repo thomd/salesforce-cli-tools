@@ -124,6 +124,10 @@ if [[ $object == "" ]]; then
     | sed /AggregateResult/d \
     | sed /ActivityHistory/d \
     | sed /^AI/d \
+    | sed /^ML/d \
+    | sed /^Incident/d \
+    | sed /^Forecasting/d \
+    | sed /^Location/d \
     | sed /OrgLifecycleNotification/d \
     | sed /^OutgoingEmail/d \
     | sed /OwnedContentDocument/d \
