@@ -29,6 +29,13 @@ Compare Account Data between Orgs:
     sf-data -o org2 -d .data2 -s Account
     daff --www .data1/Account.csv .data2/Account.csv
 
-Inspect Account Data of Default Org
+Inspect Account Data of Default Org:
 
     sf-data -v Account
+
+Inspect Relations of a given Account with other Objects of Interest:
+
+    sf-data -s Account -s User -s Contact -s AccountContactRelation
+    cd .data
+    sf-rel -l 2 0018E000027VckFQAS
+    vd *.csv
