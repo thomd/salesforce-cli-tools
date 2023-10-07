@@ -138,6 +138,7 @@ if [[ $object == "" ]]; then
     | sed /^WorkOrder/d \
     | sed /^WorkPlan/d \
     | sed /^WorkStep/d \
+    | sed /^WorkThanks/d \
     | sed /^Reputation/d \
     | sed /OrgLifecycleNotification/d \
     | sed /^OutgoingEmail/d \
