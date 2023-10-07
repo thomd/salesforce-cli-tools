@@ -64,7 +64,7 @@ while [ $# -gt 0 ]; do
   shift
 done
 
-objects=$(echo ${object} | perl -pe "s/,/, /g" | perl -pe "s/(\w+)/$(tput setaf 2)\1$(tput sgr0)/g")
+objects=$(echo ${object} | perl -pe "s/,/, /g" | perl -pe "s/(\w+)/$(tput setaf 4)\1$(tput sgr0)/g")
 yesno " Fetch ${objects} data from $(tput setaf 1)${org}$(tput sgr0) ?"
 
 if [ $visidata == true ]; then
