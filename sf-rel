@@ -56,7 +56,6 @@ done < <(fd -I -e csv)
 
 ## remove some columns we are not interested in
 while read f; do
-  #echo " $(tput setaf 4)${f}$(tput sgr 0)"
   cols=("OwnerId" "CreatedById" "LastModifiedById" "RecordTypeId" "ProfileId")
   for col in ${cols[@]}
   do
