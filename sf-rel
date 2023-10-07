@@ -1,0 +1,76 @@
+#!/usr/bin/env bash
+
+#
+# extract all records of a given set of csv files which have a relation with a specific object <id> down to the given leven <n>
+#
+# USAGE
+#
+#     sf-rel ID                        # extract record relations for ID
+#     sf-rel -l N                      # extract down to level N [default: 1]
+#
+# NOTES
+#
+#     fd -I -e orig -X mv {} {.}       # restore original files
+#
+
+yesno() {
+  echo ""
+  read -p "$1 [Y/n] " response
+  [[ $response == "n" || $response == "N" ]] && exit 1
+}
+
+level=1
+id=000
+
+while [ $# -gt 0 ]; do
+  case $1 in
+    -l)
+      shift
+      level=$1
+      ;;
+    -h|--help)
+      cat $0 | sed -n '/^#/p' | sed '/^##/d' | sed 1d | sed 's/^#/ /g' \
+        | perl -pe "s/ #(.*)$/$(tput setaf 0)\1$(tput sgr 0)/" \
+        | perl -pe "s/(USAGE|NOTES|EXAMPLES)/$(tput setaf 8)\1$(tput sgr0)/"
+      exit 1
+      ;;
+    *)
+      ;;
+  esac
+  id=$1
+  shift
+done
+
+if [ $id == '000' ]; then
+  echo -e "\n $(tput setaf 1)ID missing$(tput sgr 0)"
+  exit 1
+fi
+
+echo Level: $level
+echo Id:    $id
+
+## backup
+while read f; do
+  cp "$f" "${f}.orig"
+done < <(fd -I -e csv)
+
+## remove some columns
+while read f; do
+  echo " $(tput setaf 0)${f}$(tput sgr 0)"
+  csvcut -C "OwnerId","CreatedById","LastModifiedById" "$f" > temp
+  mv temp "$f"
+done < <(fd -I -e csv)
+
+## extract all IDs down to the given level
+while read f; do
+  echo " $(tput setaf 0)${f}$(tput sgr 0)"
+  cat "$f" | awk -v id=$id '$0 ~ id{print $0}' | tr ',' '\n' | perl -ne 'print if /^[0-9a-zA-Z]{18}/'
+done < <(fd -I -e csv)
+
+## extract
+while read f; do
+  #echo " $(tput setaf 0)${f}$(tput sgr 0)"
+  cat "$f" | awk -v id=$id '$0 ~ id || NR==1{print $0}' > temp
+  mv temp "$f"
+done < <(fd -I -e csv)
+
