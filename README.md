@@ -15,7 +15,7 @@ Alternatively symlink to custom folders:
 
 ## Dependencies
 
-The tools depend on several non standard CLI tools:
+The tools depend on the following non-standard CLI tools:
 
 * [sfdx](https://developer.salesforce.com/tools/salesforcecli): `npm install -g sfdx-cli`
 * [jq](https://jqlang.github.io/jq): `brew install jq`
@@ -23,7 +23,7 @@ The tools depend on several non standard CLI tools:
 * [daff](https://paulfitz.github.io/daff): `npm install -g daff`
 * [csvkit](https://csvkit.readthedocs.io/en/latest): `brew install csvkit`
 
-## Use Cases
+## Exemplary Use Cases
 
 ### Compare Account Data between Orgs
 
