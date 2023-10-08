@@ -1,5 +1,7 @@
 # Salesforce CLI Tools
 
+A few CLI tools for my daily work with Salesforce. All scripts are only developed to be used on OSX.
+
 ## Install
 
 Set symlinks to `~/bin/` folder:
