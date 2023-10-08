@@ -15,7 +15,7 @@ Alternatively symlink to custom folders:
 
 ## Dependencies
 
-This tool uses several non standard CLI tools:
+The tools depend on several non standard CLI tools:
 
 * [sfdx](https://developer.salesforce.com/tools/salesforcecli): `npm install -g sfdx-cli`
 * [jq](https://jqlang.github.io/jq): `brew install jq`
