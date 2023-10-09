@@ -1,6 +1,8 @@
 # Salesforce CLI Tools
 
-A few CLI tools for my daily work with Salesforce. All scripts are only developed to be used on OSX.
+A few CLI tools for my daily work with Salesforce.
+
+The scripts were created to fit my personal needs. They might not fit yours and might not work on your machine.
 
 ## Install
 
