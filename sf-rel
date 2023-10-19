@@ -7,11 +7,7 @@
 #
 #     sf-rel <Id>                               # extract records related to Id
 #     sf-rel -l 2                               # extract down to level 2 [default: 1]
-#
-#
-# NOTES
-#
-#     fd -e orig -x mv {} {.}                   # restore original csv files
+#     sf-rel -r                                 # restore original csv files
 #
 #
 # EXAMPLES
@@ -24,9 +20,15 @@ level=1
 id=000000000000000000
 ids=''
 rel_ids=$(mktemp)
+tmp=$(mktemp)
 
 while [ $# -gt 0 ]; do
   case $1 in
+    -r)
+      fd -e orig -x mv {} {.}
+      fd -e csv
+      exit 1
+      ;;
     -l)
       shift
       level=$1
@@ -34,7 +36,7 @@ while [ $# -gt 0 ]; do
     -h|--help)
       cat $0 | sed -n '/^#/p' | sed '/^##/d' | sed 1d | sed 's/^#/ /g' \
         | perl -pe "s/ #(.*)$/$(tput setaf 0)\1$(tput sgr 0)/" \
-        | perl -pe "s/(USAGE|NOTES|EXAMPLES)/$(tput setaf 8)\1$(tput sgr0)/"
+        | perl -pe "s/(USAGE|EXAMPLES)/$(tput setaf 8)\1$(tput sgr0)/"
       exit 1
       ;;
     *)
@@ -61,8 +63,8 @@ while read f; do
   do
     csvcut -n "$f" | grep $col > /dev/null
     if [ $? == 0 ]; then
-      csvcut -C "$col" "$f" > temp
-      mv temp "$f"
+      csvcut -C "$col" "$f" > ${tmp}
+      mv ${tmp} "$f"
     fi
   done
 done < <(fd -I -e csv)
@@ -80,6 +82,12 @@ fi
 
 ## extract related records from the available csv files
 while read f; do
-  cat "$f" | awk -v id=$ids '$0 ~ id || NR==1{print $0}' > temp
-  mv temp "$f"
+  cat "$f" | awk -v id=$ids '$0 ~ id || NR==1{print $0}' > ${tmp}
+  lines=$(wc -l ${tmp} | awk '{print $1}')
+  if [[ ${lines} == 1 ]]; then
+    rm "$f"
+  else
+    mv ${tmp} "$f"
+    echo "extracted $(tput setaf 4)${f}$(tput sgr 0)"
+  fi
 done < <(fd -I -e csv)
