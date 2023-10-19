@@ -4,7 +4,6 @@
 # USAGE
 #
 #     sf-deploy -o ALIAS            # deploy package based to ALIAS org [default: b2bdev2]
-#     sf-deploy -c                  # validate deployment with unit tests
 #
 
 yesno() {
@@ -17,7 +16,6 @@ yesno() {
 
 orgname="${SF_ORG_NAME}"
 org="b2bdev2"
-validate="false"
 result=$(mktemp)
 
 while [ $# -gt 0 ]; do
@@ -25,9 +23,6 @@ while [ $# -gt 0 ]; do
     -o)
       shift
       org=$1
-      ;;
-    -c)
-      validate="true"
       ;;
     -h|--help)
       cat $0 | sed -n '/^#/p' | sed '/^##/d' | sed 1d | sed 's/^#/ /g' \
@@ -42,35 +37,24 @@ while [ $# -gt 0 ]; do
 done
 
 showresult() {
-  if [[ $validate == "true" ]]; then
-    tail -n 9 ${result} | perl -pe "s/(Successfully validated the deployment)/ $(tput setaf 2)\1$(tput sgr 0)/" | cut -c -$(tput cols)
-  else
-    cat ${result} | sed 1,2d | perl -pe "s/(Component Failures \[\d+\])$/ $(tput setaf 1)\1$(tput sgr 0)/" | cut -c -$(tput cols)
-  fi
+  cat ${result} | sed 1,2d | perl -pe "s/(Component Failures \[\d+\])$/ $(tput setaf 1)\1$(tput sgr 0)/" | cut -c -$(tput cols)
   deployid=$(cat ${result} | grep "Deploy ID" | perl -pe 's/Deploy ID: (.*)/\1/')
   deployurl="https://${orgname}--${1}.sandbox.lightning.force.com/lightning/setup/DeployStatus/page?address=/changemgmt/monitorDeploymentsDetails.apexp?asyncId=${deployid}"
   echo -e "\n $(tput setaf 2)Deployment Status:$(tput sgr0)\n  ${deployurl}"
 }
 
-if [[ $validate == "true" ]]; then
-  yesno " Verify Deployment on $(tput setaf 1)${org}$(tput sgr0) ?"
-  echo -e "\n $(tput setaf 2)Verify Deployment$(tput sgr0) ..."
-  sfdx project deploy validate -x manifest/package.xml -l RunSpecifiedTests -t `cat scripts/test/unit-test-list.txt | sed s/,$// | awk '{ printf(" -t %s", $0) }'` -o ${org} > ${result}
-  showresult ${org} ${validate}
+yesno " Deploy to $(tput setaf 1)${org}$(tput sgr0) ?"
+echo -e "\n $(tput setaf 2)Build Frontend CSS$(tput sgr0) ..."
+(cd frontend && npm run frontend:build >/dev/null)
+echo " $(tput setaf 2)Deploy$(tput sgr0) ..."
+sfdx project deploy start -x manifest/package.xml --concise -o ${org} > ${result}
+if [[ $? == 0 ]]; then
+  echo " $(tput setaf 2)Publish$(tput sgr0) ..."
+  name=$(sfdx data query -o ${org} -q "SELECT Name FROM Site WHERE UrlPathPrefix=''" --json | jq -r '.result.records[].Name')
+  sfdx community publish -n ${name} -o ${org} >/dev/null
+  domain=$(sfdx data query -o ${org} -q "SELECT Domain FROM Domain WHERE HttpsOption='CommunityAlt'" --json | jq -r '.result.records[].Domain')
+  echo " $(tput setaf 2)Finish$(tput sgr0): ${domain}"
 else
-  yesno " Deploy to $(tput setaf 1)${org}$(tput sgr0) ?"
-  echo -e "\n $(tput setaf 2)Build Frontend CSS$(tput sgr0) ..."
-  (cd frontend && npm run frontend:build >/dev/null)
-  echo " $(tput setaf 2)Deploy$(tput sgr0) ..."
-  sfdx project deploy start -x manifest/package.xml --concise -o ${org} > ${result}
-  if [[ $? == 0 ]]; then
-    echo " $(tput setaf 2)Publish$(tput sgr0) ..."
-    name=$(sfdx data query -o ${org} -q "SELECT Name FROM Site WHERE UrlPathPrefix=''" --json | jq -r '.result.records[].Name')
-    sfdx community publish -n ${name} -o ${org} >/dev/null
-    domain=$(sfdx data query -o ${org} -q "SELECT Domain FROM Domain WHERE HttpsOption='CommunityAlt'" --json | jq -r '.result.records[].Domain')
-    echo " $(tput setaf 2)Finish$(tput sgr0): ${domain}"
-  else
-    showresult ${org} ${validate}
-  fi
-  git restore force-app/main/default/staticresources/b2bTheme.css
+  showresult ${org}
 fi
+git restore force-app/main/default/staticresources/b2bTheme.css

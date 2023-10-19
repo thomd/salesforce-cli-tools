@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+
+#
+# USAGE
+#
+#     sf-validate -o ALIAS         # validate deployment with unit tests on ALIAS org [default: b2bdev2]
+#
+
+yesno() {
+  echo ""
+  read -p "$1 [Y/n] " response
+  [[ $response == "n" || $response == "N" ]] && exit 1
+}
+
+[ -z "${SF_ORG_NAME}" ] && echo -e >&2 "\n $(tput setaf 0)environment variable 'SF_ORG_NAME' is missing$(tput sgr 0)" && exit 1
+
+orgname="${SF_ORG_NAME}"
+org="b2bdev2"
+result=$(mktemp)
+
+while [ $# -gt 0 ]; do
+  case $1 in
+    -o)
+      shift
+      org=$1
+      ;;
+    -h|--help)
+      cat $0 | sed -n '/^#/p' | sed '/^##/d' | sed 1d | sed 's/^#/ /g' \
+        | perl -pe "s/ #(.*)$/$(tput setaf 0)\1$(tput sgr 0)/" \
+        | perl -pe "s/(USAGE|EXAMPLES)/$(tput setaf 8)\1$(tput sgr0)/"
+      exit 1
+      ;;
+    *)
+      ;;
+  esac
+  shift
+done
+
+showresult() {
+  tail -n 9 ${result} | perl -pe "s/(Successfully validated the deployment)/ $(tput setaf 2)\1$(tput sgr 0)/" | cut -c -$(tput cols)
+  deployid=$(cat ${result} | grep "Deploy ID" | perl -pe 's/Deploy ID: (.*)/\1/')
+  deployurl="https://${orgname}--${1}.sandbox.lightning.force.com/lightning/setup/DeployStatus/page?address=/changemgmt/monitorDeploymentsDetails.apexp?asyncId=${deployid}"
+  echo -e "\n $(tput setaf 2)Deployment Status:$(tput sgr0)\n  ${deployurl}"
+}
+
+yesno " Validate Deployment on $(tput setaf 1)${org}$(tput sgr0) ?"
+echo -e "\n $(tput setaf 2)Validate and Run Unti-Tests$(tput sgr0) ..."
+sfdx project deploy validate -x manifest/package.xml -l RunSpecifiedTests -t `cat scripts/test/unit-test-list.txt | sed s/,$// | awk '{ printf(" -t %s", $0) }'` -o ${org} > ${result}
+showresult ${org} ${validate}
