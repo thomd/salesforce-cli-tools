@@ -10,6 +10,8 @@
 #     sf-data -s OBJ_1 -s OBJ_2         # query objects OBJ_1 and OBJ_2 and save in DIR
 #     sf-data -v OBJ                    # query Object OBJ and open in Visidata
 #
+#     sf-data -r                        # refresh data in current directory
+#
 #
 # EXAMPLES
 #
@@ -28,6 +30,7 @@ target=".data"
 object=""
 visidata=false
 listfile="object.names"
+refresh=false
 
 while [ $# -gt 0 ]; do
   case $1 in
@@ -38,6 +41,9 @@ while [ $# -gt 0 ]; do
     -d)
       shift
       target=$1
+      ;;
+    -r)
+      refresh=true
       ;;
     -s)
       shift
@@ -63,6 +69,15 @@ while [ $# -gt 0 ]; do
   esac
   shift
 done
+
+if [ $refresh == true ]; then
+  object=$(fd . ${target} -e csv -x echo {/.} | tr '\n' ',')
+  if [[ ${object} == "" ]];then
+    echo -e >&2 "\n Folder $(tput setaf 4)${target}$(tput sgr 0) is empty"
+    exit 1
+  fi
+  object=${object::-1}
+fi
 
 objects=$(echo ${object} | perl -pe "s/,/, /g" | perl -pe "s/(\w+)/$(tput setaf 4)\1$(tput sgr0)/g")
 yesno " Fetch ${objects} data from $(tput setaf 1)${org}$(tput sgr0) ?"
