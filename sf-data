@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
 #
+# Download data of all or of specific Salesforce objects as csv files
+#
 # USAGE
 #
 #     sf-data -o ALIAS                  # query from ALIAS org [default: b2bdev2]
@@ -61,7 +63,7 @@ while [ $# -gt 0 ]; do
     -h|--help)
       cat $0 | sed -n '/^#/p' | sed '/^##/d' | sed 1d | sed 's/^#/ /g' \
         | perl -pe "s/ #(.*)$/$(tput setaf 0)\1$(tput sgr 0)/" \
-        | perl -pe "s/(USAGE|EXAMPLES)/$(tput setaf 8)\1$(tput sgr0)/"
+        | perl -pe "s/(USAGE|EXAMPLES)/$(tput setaf 0)\1$(tput sgr 0)/"
       exit 1
       ;;
     *)
@@ -90,7 +92,7 @@ if [ $visidata == true ]; then
   exit 0
 fi
 
-# this is an opinionated list of sobjects which are either not of interest or do not support queries
+## this is an opinionated list of sobjects which are either not of interest or do not support queries
 if [[ $object == "" ]]; then
   sfdx sobject list -o ${org} -s all \
     | sed /osf/d \

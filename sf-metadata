@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
 #
+# Download metadata of all or of specific Salesforce metadata types as xml files
+#
 # USAGE
 #
 #    sf-metadata -o ALIAS                  # retrieve metadata from ALIAS org [default: b2bdev2]
@@ -36,7 +38,7 @@ while [ $# -gt 0 ]; do
     -h)
       cat $0 | sed -n '/^#/p' | sed '/^##/d' | sed 1d | sed 's/^#/ /g' \
         | perl -pe "s/ #(.*)$/$(tput setaf 0)\1$(tput sgr 0)/" \
-        | perl -pe "s/(USAGE|EXAMPLES)/$(tput setaf 8)\1$(tput sgr0)/"
+        | perl -pe "s/(USAGE|EXAMPLES)/$(tput setaf 0)\1$(tput sgr 0)/"
       exit 1
       ;;
     *)

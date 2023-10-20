@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
 #
+# Validate a SFDX project against an Org and run unit tests
+#
 # USAGE
 #
 #     sf-validate -o ALIAS         # validate deployment with unit tests on ALIAS org [default: b2bdev2]
@@ -27,7 +29,7 @@ while [ $# -gt 0 ]; do
     -h|--help)
       cat $0 | sed -n '/^#/p' | sed '/^##/d' | sed 1d | sed 's/^#/ /g' \
         | perl -pe "s/ #(.*)$/$(tput setaf 0)\1$(tput sgr 0)/" \
-        | perl -pe "s/(USAGE|EXAMPLES)/$(tput setaf 8)\1$(tput sgr0)/"
+        | perl -pe "s/(USAGE|EXAMPLES)/$(tput setaf 0)\1$(tput sgr 0)/"
       exit 1
       ;;
     *)

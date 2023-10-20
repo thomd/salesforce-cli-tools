@@ -2,7 +2,7 @@
 
 A few CLI tools for my daily work with Salesforce.
 
-The scripts were created to fit my personal needs. They might not fit yours and might not work on your machine.
+The scripts were created to fit my personal needs. They might not fit yours and might not work on your machine or project setup.
 
 ## Install
 
@@ -24,6 +24,10 @@ The tools depend on the following non-standard CLI tools:
 * [VisiData](https://www.visidata.org): `brew install saulpw/vd/visidata`
 * [daff](https://paulfitz.github.io/daff): `npm install -g daff`
 * [csvkit](https://csvkit.readthedocs.io/en/latest): `brew install csvkit`
+
+## Usage
+
+Run `--help` or `-h` option to get a description of the tool and how to use it.
 
 ## Exemplary Use Cases
 

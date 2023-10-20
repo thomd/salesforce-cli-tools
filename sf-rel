@@ -1,14 +1,13 @@
 #!/usr/bin/env bash
 
 #
-# given set of csv files (e.g. by using `sf-data`), extract all records related to a object id
+# given set of csv files (e.g. retrieved using `sf-data`), extract all records related to a given object id
 #
 # USAGE
 #
-#     sf-rel <Id>                               # extract records related to Id
+#     sf-rel <id>                               # extract records related to <id>
 #     sf-rel -l 2                               # extract down to level 2 [default: 1]
 #     sf-rel -r                                 # restore original csv files
-#
 #
 # EXAMPLES
 #
@@ -36,7 +35,8 @@ while [ $# -gt 0 ]; do
     -h|--help)
       cat $0 | sed -n '/^#/p' | sed '/^##/d' | sed 1d | sed 's/^#/ /g' \
         | perl -pe "s/ #(.*)$/$(tput setaf 0)\1$(tput sgr 0)/" \
-        | perl -pe "s/(USAGE|EXAMPLES)/$(tput setaf 8)\1$(tput sgr0)/"
+        | perl -pe "s/(USAGE|EXAMPLES)/$(tput setaf 0)\1$(tput sgr 0)/" \
+        | perl -pe "s/\`(.+)\`/$(tput sgr 0 1)\1$(tput sgr 0)/"
       exit 1
       ;;
     *)
