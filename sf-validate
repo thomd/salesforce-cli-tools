@@ -48,4 +48,4 @@ showresult() {
 yesno " Validate on $(tput setaf 1)${org}$(tput sgr0) ?"
 echo -e "\n $(tput setaf 2)Validate and Run Unti-Tests$(tput sgr0) ..."
 sfdx project deploy validate -x manifest/package.xml -l RunSpecifiedTests -t `cat scripts/test/unit-test-list.txt | sed s/,$// | awk '{ printf(" -t %s", $0) }'` -o ${org} > ${result}
-showresult ${org} ${validate}
+showresult ${org}
