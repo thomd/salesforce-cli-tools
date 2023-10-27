@@ -8,7 +8,8 @@ _sfdata_completions() {
     prev="${COMP_WORDS[COMP_CWORD-1]}"
 
     if [ ! -f "${cache}" ]; then
-      sfdx sobject list -o b2bdev1 -s all | paste -sd' ' - > ${cache}
+      org=$(sf config get target-org --json | jq -r '.result[].value')
+      sf sobject list -o ${org} -s all | paste -sd' ' - > ${cache}
     fi
     orgs=$(cat ${cache})
 

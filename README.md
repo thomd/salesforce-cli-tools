@@ -19,7 +19,7 @@ Alternatively symlink to custom folders:
 
 The tools depend on the following non-standard CLI tools:
 
-* [sfdx](https://developer.salesforce.com/tools/salesforcecli): `npm install -g sfdx-cli`
+* [sf](https://github.com/salesforcecli/cli): `npm install -g @salesforce/cli`
 * [jq](https://jqlang.github.io/jq): `brew install jq`
 * [VisiData](https://www.visidata.org): `brew install saulpw/vd/visidata`
 * [daff](https://paulfitz.github.io/daff): `npm install -g daff`

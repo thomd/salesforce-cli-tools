@@ -8,8 +8,8 @@ _sfmetadata_completions() {
     prev="${COMP_WORDS[COMP_CWORD-1]}"
 
     if [ ! -f "${cache}" ]; then
-      org=$(sfdx config get target-org --json | jq -r '.result[].value')
-      sfdx org list metadata-types -o ${org} | jq -r '.metadataObjects[].xmlName' | paste -sd' ' - > ${cache}
+      org=$(sf config get target-org --json | jq -r '.result[].value')
+      sf org list metadata-types -o ${org} | jq -r '.metadataObjects[].xmlName' | paste -sd' ' - > ${cache}
     fi
     names=$(cat ${cache})
 

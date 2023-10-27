@@ -49,12 +49,12 @@ yesno " Deploy to $(tput setaf 1)${org}$(tput sgr0) ?"
 echo -e "\n $(tput setaf 2)Build Frontend CSS$(tput sgr0) ..."
 (cd frontend && npm run frontend:build >/dev/null)
 echo " $(tput setaf 2)Deploy$(tput sgr0) ..."
-sfdx project deploy start -x manifest/package.xml --concise -o ${org} > ${result}
+sf project deploy start -x manifest/package.xml --concise -o ${org} > ${result}
 if [[ $? == 0 ]]; then
   echo " $(tput setaf 2)Publish$(tput sgr0) ..."
-  name=$(sfdx data query -o ${org} -q "SELECT Name FROM Site WHERE UrlPathPrefix=''" --json | jq -r '.result.records[].Name')
-  sfdx community publish -n ${name} -o ${org} >/dev/null
-  domain=$(sfdx data query -o ${org} -q "SELECT Domain FROM Domain WHERE HttpsOption='CommunityAlt'" --json | jq -r '.result.records[].Domain')
+  name=$(sf data query -o ${org} -q "SELECT Name FROM Site WHERE UrlPathPrefix=''" --json | jq -r '.result.records[].Name')
+  sf community publish -n ${name} -o ${org} >/dev/null
+  domain=$(sf data query -o ${org} -q "SELECT Domain FROM Domain WHERE HttpsOption='CommunityAlt'" --json | jq -r '.result.records[].Domain')
   echo " $(tput setaf 2)Finish$(tput sgr0): ${domain}"
 else
   showresult ${org}

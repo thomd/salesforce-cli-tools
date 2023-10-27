@@ -6,6 +6,7 @@
 # USAGE
 #
 #     sf-validate -o ALIAS         # validate deployment with unit tests on ALIAS org [default: b2bdev2]
+#     sf-validate -n               # validate deployment without unit tests
 #
 
 yesno() {
@@ -18,6 +19,7 @@ yesno() {
 
 orgname="${SF_ORG_NAME}"
 org="b2bdev2"
+unittests=true
 result=$(mktemp)
 
 while [ $# -gt 0 ]; do
@@ -25,6 +27,9 @@ while [ $# -gt 0 ]; do
     -o)
       shift
       org=$1
+      ;;
+    -n)
+      unittests=false
       ;;
     -h|--help)
       cat $0 | sed -n '/^#/p' | sed '/^##/d' | sed 1d | sed 's/^#/ /g' \
@@ -45,7 +50,13 @@ showresult() {
   echo -e "\n $(tput setaf 2)Deployment Status:$(tput sgr0)\n  ${deployurl}"
 }
 
-yesno " Validate on $(tput setaf 1)${org}$(tput sgr0) ?"
-echo -e "\n $(tput setaf 2)Validate and Run Unti-Tests$(tput sgr0) ..."
-sfdx project deploy validate -x manifest/package.xml -l RunSpecifiedTests -t `cat scripts/test/unit-test-list.txt | sed s/,$// | awk '{ printf(" -t %s", $0) }'` -o ${org} > ${result}
+if [ $unittests == true ]; then
+  yesno " Validate and run Unit Tests on $(tput setaf 1)${org}$(tput sgr0) ?"
+  echo -e "\n $(tput setaf 2)Validate and run Unti Tests$(tput sgr0) ..."
+  sf project deploy validate -x manifest/package.xml -l RunSpecifiedTests `sed s/,$// scripts/test/unit-test-list.txt | awk '{ printf(" -t %s", $0) }'` -o ${org} > ${result}
+else
+  yesno " Validate on $(tput setaf 1)${org}$(tput sgr0) ?"
+  echo -e "\n $(tput setaf 2)Validate$(tput sgr0) ..."
+  sf project deploy validate -x manifest/package.xml -o ${org} > ${result}
+fi
 showresult ${org}
