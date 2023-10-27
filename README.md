@@ -37,7 +37,7 @@ Run `--help` or `-h` option to get a description of the tool and how to use it.
     sf-data -o org2 -d .data2 -s Account
     daff --www .data1/Account.csv .data2/Account.csv
 
-### Inspect Account Data of Default Org
+### Inspect Account Data in VisiData
 
     sf-data -v Account
 
