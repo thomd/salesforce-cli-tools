@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+
+#
+# turn on trace debugging
+#
+# USAGE
+#
+#     sf-log -o ALIAS                 # enable trace logging for 24 hours on ALIAS org [default: b2bdev2]
+#
+
+org='b2bdev2'
+
+while [ $# -gt 0 ]; do
+  case $1 in
+    -o)
+      shift
+      org=$1
+      ;;
+    -h|--help)
+      cat $0 | sed -n '/^#/p' | sed '/^##/d' | sed 1d | sed 's/^#/ /g' \
+        | perl -pe "s/ #(.*)$/$(tput setaf 0)\1$(tput sgr 0)/" \
+        | perl -pe "s/(USAGE|EXAMPLES)/$(tput setaf 0)\1$(tput sgr 0)/"
+      exit 1
+      ;;
+    *)
+      ;;
+  esac
+  shift
+done
+
+now=`date -u +"%Y-%m-%dT%H:%M:%SZ"`
+exp=`date -v+24H -u +"%Y-%m-%dT%H:%M:%SZ"`
+username=`sf org display -o ${org} --json | jq -r '.result.username'`
+userid=`sf data query -q "SELECT id from USER where Username='${username}'" -o ${org} --json | jq -r '.result.records[].Id'`
+traceid=`sf data query -q "SELECT Id FROM Traceflag WHERE TracedEntityId IN (SELECT ID from User WHERE ID = '${userid}')" -t -o ${org} --json | jq -r '.result.records[].Id'`
+
+sf data update record -s TraceFlag -i ${traceid} -v "StartDate=${now} ExpirationDate=${exp}" -t
