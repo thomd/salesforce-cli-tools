@@ -1,0 +1,94 @@
+#!/usr/bin/env bash
+
+#
+# Download data of all or of specific sobjects of the Tooling API as csv files
+#
+# USAGE
+#
+#     sf-tdata -o ALIAS                  # query from ALIAS org [default: b2bdev2]
+#     sf-tdata -d DIR                    # save data in DIR folder [default: .tdata]
+#     sf-tdata                           # query all data from default org and save in default folder
+#
+#     sf-tdata -s OBJ_1 -s OBJ_2         # query objects OBJ_1 and OBJ_2 and save in DIR
+#     sf-tdata -v OBJ                    # query Object OBJ and open in Visidata
+#
+
+yesno() {
+  echo ""
+  read -p "$1 [Y/n] " response
+  [[ $response == "n" || $response == "N" ]] && exit 1
+}
+
+org="b2bdev2"
+target=".tdata"
+object="all"
+visidata=false
+listfile=$(mktemp)
+
+while [ $# -gt 0 ]; do
+  case $1 in
+    -o)
+      shift
+      org=$1
+      ;;
+    -d)
+      shift
+      target=$1
+      ;;
+    -s)
+      shift
+      if [[ $object == "all" ]]; then
+        object=$1
+      else
+        object="${object},${1}"
+      fi
+      ;;
+    -v)
+      shift
+      object=$1
+      visidata=true
+      ;;
+    -h|--help)
+      cat $0 | sed -n '/^#/p' | sed '/^##/d' | sed 1d | sed 's/^#/ /g' \
+        | perl -pe "s/ #(.*)$/$(tput setaf 0)\1$(tput sgr 0)/" \
+        | perl -pe "s/(USAGE|EXAMPLES)/$(tput setaf 0)\1$(tput sgr 0)/"
+      exit 1
+      ;;
+    *)
+      ;;
+  esac
+  shift
+done
+
+objects=$(echo ${object} | perl -pe "s/,/, /g" | perl -pe "s/(\w+)/$(tput setaf 4)\1$(tput sgr0)/g")
+yesno " Fetch ${objects} data of $(tput setaf 2)Tooling API$(tput sgr0) from $(tput setaf 1)${org}$(tput sgr0) ?"
+
+if [ $visidata == true ]; then
+  echo ""
+  target=$(mktemp)
+  sf data query -q "SELECT `sf sobject describe -t -o ${org} -s ${object} | jq -r '.fields[].name' | paste -sd, -` FROM ${object}" -t -o ${org} -r csv > "${target}"
+  vd "${target}"
+  exit 0
+fi
+
+if [[ $object == "all" ]]; then
+  orgdata=$(sf org display -o ${org} --json)
+  instanceUrl=$(jq -r '.result.instanceUrl' <<< "${orgdata}")
+  accessToken=$(jq -r '.result.accessToken' <<< "${orgdata}")
+  curl -s "${instanceUrl}/services/data/v59.0/tooling/sobjects/" -H "Authorization: Bearer ${accessToken}" | jq -r '.sobjects[].name' > ${listfile}
+else
+  echo ${object} | tr -d ' ' | tr ',' '\n' > ${listfile}
+fi
+
+total=$(cat ${listfile} | wc -l | tr -d ' ')
+mkdir -p ${target}
+c=0
+while read obj; do
+  c=$((c+1))
+  echo -e "\n $(tput setaf 8)[${c}/${total}]$(tput sgr0) $(tput setaf 4)${obj}$(tput sgr0):"
+  fields=$(sf sobject describe -t -s ${obj} -o ${org} | jq -r '.fields[].name' | paste -sd, -)
+  sf data query -q "SELECT ${fields} FROM ${obj}" -t -o ${org} -r csv > ${target}/${obj}.csv
+    wc -l ${target}/${obj}.csv | awk '{if($1 == "0" || $1 == "1"){ print " " $2 ": \033[31mempty" } else { print " " $2 ": \033[32m" $1-1 " records" } }'
+    awk 'NR == 1; NR > 1 { print $0 | "sort" }' ${target}/${obj}.csv > ${target}/temp; mv ${target}/temp ${target}/${obj}.csv
+    find ${target}/${obj}.csv -type f -size -2c -delete
+done < <(cat ${listfile})

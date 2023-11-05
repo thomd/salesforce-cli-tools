@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+
+# <token>: sf org display -o <org> --json | jq -r '.result.accessToken'
+# <url>:   sf org display -o <org> --json | jq -r '.result.instanceUrl'
+# curl -s "<url>/services/data/v59.0/tooling/sobjects/" -H 'Authorization: Bearer <token>' | jq -r '.sobjects[].name'
+
+_sftdata_completions() {
+    local cur prev orgs
+    cache="/tmp/sf-tdata.sobjects"
+    COMPREPLY=()
+    cur="${COMP_WORDS[COMP_CWORD]}"
+    prev="${COMP_WORDS[COMP_CWORD-1]}"
+
+    if [ ! -f "${cache}" ]; then
+      org=$(sf config get target-org --json | jq -r '.result[].value')
+      sf sobject list -o ${org} -s all | paste -sd' ' - > ${cache}
+    fi
+    orgs=$(cat ${cache})
+
+    case "${prev}" in
+        -s|-v)
+            COMPREPLY=($(compgen -W "${orgs}" -- ${cur}))
+            return 0
+            ;;
+    esac
+}
+
+complete -F _sftdata_completions sf-tdata
