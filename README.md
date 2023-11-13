@@ -50,3 +50,11 @@ Supposed you are interested in the realations of an Account `0018E000027VckFQAS`
     cd .data
     sf-rel -l 2 0018E000027VckFQAS
     vd *.csv
+
+### Deploy Files from Git Index to Org
+
+Only deploying the files you are working on is way faster that always deploying the full project. 
+
+File changes are detected automatically and deployed on change for ease of development.
+
+    sf-deploy
