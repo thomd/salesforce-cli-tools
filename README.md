@@ -24,6 +24,7 @@ The tools depend on the following non-standard CLI tools:
 * [VisiData](https://www.visidata.org): `brew install saulpw/vd/visidata`
 * [daff](https://paulfitz.github.io/daff): `npm install -g daff`
 * [csvkit](https://csvkit.readthedocs.io/en/latest): `brew install csvkit`
+* [watchexec-cli](https://crates.io/crates/watchexec-cli): `brew install watchexec`
 
 ## Usage
 

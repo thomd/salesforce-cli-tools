@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
 
 #
-# Build, deploy and publish a SFDX project to an Org
+# Build, deploy and publish a project to an Org
 #
 # USAGE
 #
-#     sf-deploy -o ALIAS            # deploy package based to ALIAS org [default: b2bdev2]
+#     sf-deploy                     # deploy files in git staging area in watch mode (or full build, deploy & publish on empty git index)
+#     sf-deploy -x                  # build, deploy and publish explicitly
+#     sf-deploy -o ALIAS            # deploy to ALIAS org [default: b2bdev2]
 #
 
 yesno() {
@@ -18,13 +20,18 @@ yesno() {
 
 orgname="${SF_ORG_NAME}"
 org="b2bdev2"
+appfolder="force-app"
 result=$(mktemp)
+all=false
 
 while [ $# -gt 0 ]; do
   case $1 in
     -o)
       shift
       org=$1
+      ;;
+    -x)
+      all=true
       ;;
     -h|--help)
       cat $0 | sed -n '/^#/p' | sed '/^##/d' | sed 1d | sed 's/^#/ /g' \
@@ -45,18 +52,31 @@ showresult() {
   echo -e "\n $(tput setaf 2)Deployment Status:$(tput sgr0)\n  ${deployurl}"
 }
 
-yesno " Deploy to $(tput setaf 1)${org}$(tput sgr0) ?"
-echo -e "\n $(tput setaf 2)Build Frontend CSS$(tput sgr0) ..."
-(cd frontend && npm run frontend:build >/dev/null)
-echo " $(tput setaf 2)Deploy$(tput sgr0) ..."
-sf project deploy start -x manifest/package.xml --concise -o ${org} > ${result}
-if [[ $? == 0 ]]; then
-  echo " $(tput setaf 2)Publish$(tput sgr0) ..."
-  name=$(sf data query -o ${org} -q "SELECT Name FROM Site WHERE UrlPathPrefix=''" --json | jq -r '.result.records[].Name')
-  sf community publish -n ${name} -o ${org} >/dev/null
-  domain=$(sf data query -o ${org} -q "SELECT Domain FROM Domain WHERE HttpsOption='CommunityAlt'" --json | jq -r '.result.records[].Domain')
-  echo " $(tput setaf 2)Finish$(tput sgr0): ${domain}"
+deployAll() {
+  echo -e "\n $(tput setaf 2)Build Frontend CSS$(tput sgr0) ..."
+  (cd frontend && npm run frontend:build >/dev/null)
+  echo " $(tput setaf 2)Deploy$(tput sgr0) ..."
+  sf project deploy start -x manifest/package.xml --concise -o ${org} > ${result}
+  if [[ $? == 0 ]]; then
+    echo " $(tput setaf 2)Publish$(tput sgr0) ..."
+    name=$(sf data query -o ${org} -q "SELECT Name FROM Site WHERE UrlPathPrefix=''" --json | jq -r '.result.records[].Name')
+    sf community publish -n ${name} -o ${org} >/dev/null
+    domain=$(sf data query -o ${org} -q "SELECT Domain FROM Domain WHERE HttpsOption='CommunityAlt'" --json | jq -r '.result.records[].Domain')
+    echo " $(tput setaf 2)Finish$(tput sgr0): ${domain}"
+  else
+    showresult ${org}
+  fi
+  git restore force-app/main/default/staticresources/b2bTheme.css
+}
+
+
+if [[ $(git diff --name-only | wc -l | tr -d ' ') == 0 || $all == true ]]; then
+  yesno " Build, Deploy and Publish to $(tput setaf 1)${org}$(tput sgr0) ?"
+  deployAll
 else
-  showresult ${org}
+  yesno " Deploy $(tput setaf 2)git index$(tput sgr0) to $(tput setaf 1)${org}$(tput sgr0) ?"
+  echo
+  watchexec -w force-app -- sf-deploy-index ${org}
 fi
-git restore force-app/main/default/staticresources/b2bTheme.css
+
+

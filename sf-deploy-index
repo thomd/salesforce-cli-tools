@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+
+# helper script for sf-deploy
+
+
+org=${1:b2bdv2}
+
+mapOption() {
+  option=''
+  case $1 in
+    staticresources*)
+      option="StaticResource:"
+      option="${option}$(echo $1 | perl -pe 's#staticresources/(.+?)\..+#\1#')"
+      ;;
+    lwc*)
+      option="LightningComponentBundle:"
+      option="${option}$(echo $1 | perl -pe 's#lwc/(.+?)/.+#\1#')"
+      ;;
+    classes*)
+      option="ApexClass:"
+      option="${option}$(echo $1 | perl -pe 's#classes/(.+?)\..+#\1#')"
+      ;;
+  esac
+  echo ${option}
+}
+
+declare -a options
+while read f; do
+  path=$(echo $f | perl -pe 's#force-app/main/default/([^/]*)#\1#')
+  options=(${options[@]} "$(mapOption "${path}")")
+done < <(git diff --name-only)
+
+uniq_options=($(for option in "${options[@]}"; do echo "${option}"; done | sort -u))
+
+if [[ ${#uniq_options[@]} == 0 ]]; then
+  echo -e " $(tput setaf 1)git index is empty, nothing to deploy$(tput sgr0) ...\n"
+else
+  echo -e " $(tput setaf 2)found ${#uniq_options[@]} file(s) to deploy$(tput sgr0) ...\n"
+  opts=''
+  for p in ${uniq_options[@]}; do
+    opts="${opts} -m ${p}"
+  done
+  sf project deploy start${opts} -o ${org}
+  echo -e " $(tput setaf 2)waiting for changes$(tput sgr0) ...\n"
+fi
