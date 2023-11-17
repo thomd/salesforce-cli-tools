@@ -22,7 +22,7 @@ yesno() {
 orgname="${SF_ORG_NAME}"
 
 org=$(cat .sf/config.json 2>/dev/null | jq -r '."target-org"')
-[ -z "${org}" ] && echo -e >&2 "\n $(tput setaf 1)org-alias is missing$(tput sgr 0)" && exit 1
+[ -z "${org}" ] && echo -e >&2 "\n $(tput setaf 1)org-alias is missing$(tput sgr 0)\n\n     $(tput setaf 0)sf config set target-org <org>$(tput sgr 0)" && exit 1
 
 appfolder="force-app"
 result=$(mktemp)

@@ -58,3 +58,6 @@ Only deploying the files you are working on is way faster that always deploying 
 File changes are detected automatically and deployed on change for ease of development.
 
     sf-deploy
+
+There are some pitfalls though, supposed you change a class which will then be deployed automatically and then revert the change, then this class is not
+detected as a change and not deplloyed. As a result, the changed class keeps deployed.
