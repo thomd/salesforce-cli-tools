@@ -81,7 +81,7 @@ if [ $refresh == true ]; then
 fi
 
 objects=$(echo ${object} | perl -pe "s/,/, /g" | perl -pe "s/(\w+)/$(tput setaf 4)\1$(tput sgr0)/g")
-yesno " Fetch ${objects} data from $(tput setaf 1)${org}$(tput sgr0) ?"
+yesno " Fetch $([[ ${objects} == "" ]] && echo "$(tput setaf 4)all$(tput sgr0)" || echo ${objects}) data from $(tput setaf 1)${org}$(tput sgr0) ?"
 
 if [ $visidata == true ]; then
   echo ""
