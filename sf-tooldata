@@ -6,7 +6,7 @@
 # USAGE
 #
 #     sf-tdata -o ALIAS                  # query from ALIAS org [default: b2bdev2]
-#     sf-tdata -d DIR                    # save data in DIR folder [default: .tdata]
+#     sf-tdata -d DIR                    # save data in DIR folder [default: .tooldata]
 #     sf-tdata                           # query all data from default org and save in default folder
 #
 #     sf-tdata -s OBJ_1 -s OBJ_2         # query objects OBJ_1 and OBJ_2 and save in DIR
@@ -20,7 +20,7 @@ yesno() {
 }
 
 org="b2bdev2"
-target=".tdata"
+target=".tooldata"
 object="all"
 visidata=false
 listfile=$(mktemp)
@@ -66,7 +66,8 @@ yesno " Fetch ${objects} data of $(tput setaf 2)Tooling API$(tput sgr0) from $(t
 if [ $visidata == true ]; then
   echo ""
   target=$(mktemp)
-  sf data query -q "SELECT `sf sobject describe -t -o ${org} -s ${object} | jq -r '.fields[].name' | paste -sd, -` FROM ${object}" -t -o ${org} -r csv > "${target}"
+  fields=$(sf sobject describe -t -s ${object} -o ${org} | jq -r '.fields[] | select(.createable == false) | .name' | paste -sd, -)
+  sf data query -q "SELECT ${fields} FROM ${object}" -t -o ${org} -r csv > "${target}"
   vd "${target}"
   exit 0
 fi
@@ -86,7 +87,7 @@ c=0
 while read obj; do
   c=$((c+1))
   echo -e "\n $(tput setaf 8)[${c}/${total}]$(tput sgr0) $(tput setaf 4)${obj}$(tput sgr0):"
-  fields=$(sf sobject describe -t -s ${obj} -o ${org} | jq -r '.fields[].name' | paste -sd, -)
+  fields=$(sf sobject describe -t -s ${obj} -o ${org} | jq -r '.fields[] | select(.createable == false) | .name' | paste -sd, -)
   sf data query -q "SELECT ${fields} FROM ${obj}" -t -o ${org} -r csv > ${target}/${obj}.csv
     wc -l ${target}/${obj}.csv | awk '{if($1 == "0" || $1 == "1"){ print " " $2 ": \033[31mempty" } else { print " " $2 ": \033[32m" $1-1 " records" } }'
     awk 'NR == 1; NR > 1 { print $0 | "sort" }' ${target}/${obj}.csv > ${target}/temp; mv ${target}/temp ${target}/${obj}.csv
