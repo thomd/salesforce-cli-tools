@@ -7,8 +7,11 @@ _sfmetadata_completions() {
     cur="${COMP_WORDS[COMP_CWORD]}"
     prev="${COMP_WORDS[COMP_CWORD-1]}"
 
-    if [ ! -f "${cache}" ]; then
-      org=$(sf config get target-org --json | jq -r '.result[].value')
+    if [ ! -s "${cache}" ]; then
+      org=$(cat .sf/config.json 2>/dev/null | jq -r '."target-org" | select( . != null )')
+      if [[ -z "$org" ]]; then
+        org=$(cat ~/.sf/config.json 2>/dev/null | jq -r '."target-org" | select( . != null )')
+      fi
       sf org list metadata-types -o ${org} | jq -r '.metadataObjects[].xmlName' | paste -sd' ' - > ${cache}
     fi
     names=$(cat ${cache})
