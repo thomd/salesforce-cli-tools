@@ -5,7 +5,7 @@
 #
 # USAGE
 #
-#     sf-validate -o ALIAS         # validate deployment with unit tests on ALIAS org [default: b2bdev2]
+#     sf-validate -o ALIAS         # validate deployment with unit tests on ALIAS org
 #     sf-validate -n               # validate deployment without unit tests
 #
 
@@ -15,10 +15,20 @@ yesno() {
   [[ $response == "n" || $response == "N" ]] && exit 1
 }
 
-[ -z "${SF_ORG_NAME}" ] && echo -e >&2 "\n $(tput setaf 0)environment variable 'SF_ORG_NAME' is missing$(tput sgr 0)" && exit 1
+setTargetOrg() {
+  if [[ -z "$org" ]]; then
+    org=$(cat .sf/config.json 2>/dev/null | jq -r '."target-org" | select( . != null )')
+  fi
+  if [[ -z "$org" ]]; then
+    org=$(cat ~/.sf/config.json 2>/dev/null | jq -r '."target-org" | select( . != null )')
+  fi
+  if [[ -z "$org" ]]; then
+    echo -e >&2 "\n $(tput setaf 1)Missing target org$(tput sgr 0)\n\n   Either provide with $(tput setaf 0)-o$(tput sgr 0) option, or set via $(tput setaf 0)sf config set target-org <org>$(tput sgr 0)"
+    exit 1
+  fi
+}
 
-orgname="${SF_ORG_NAME}"
-org="b2bdev2"
+org=""
 unittests=true
 result=$(mktemp)
 
@@ -46,6 +56,7 @@ done
 showresult() {
   tail -n 9 ${result} | perl -pe "s/(Successfully validated the deployment)/ $(tput setaf 2)\1$(tput sgr 0)/" | cut -c -$(tput cols)
   deployid=$(cat ${result} | grep "Deploy ID" | perl -pe 's/Deploy ID: (.*)/\1/')
+  orgname=$(sf data query -q "SELECT Domain FROM Domain WHERE HttpsOption = 'CommunityAlt'" --json | jq -r '.result.records[].Domain' | perl -pe 's/(.+)--.+/\1/')
   deployurl="https://${orgname}--${1}.sandbox.lightning.force.com/lightning/setup/DeployStatus/page?address=/changemgmt/monitorDeploymentsDetails.apexp?asyncId=${deployid}"
   echo -e "\n $(tput setaf 2)Deployment Status:$(tput sgr0)\n  ${deployurl}"
 }

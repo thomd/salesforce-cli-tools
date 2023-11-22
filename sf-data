@@ -5,7 +5,7 @@
 #
 # USAGE
 #
-#     sf-data -o ALIAS                  # query from ALIAS org [default: b2bdev2]
+#     sf-data -o ALIAS                  # query from ALIAS org
 #     sf-data -d DIR                    # save data in DIR folder [default: .data]
 #     sf-data                           # query all data from default org and save in default folder
 #
@@ -26,7 +26,20 @@ yesno() {
   [[ $response == "n" || $response == "N" ]] && exit 1
 }
 
-org="b2bdev2"
+setTargetOrg() {
+  if [[ -z "$org" ]]; then
+    org=$(cat .sf/config.json 2>/dev/null | jq -r '."target-org" | select( . != null )')
+  fi
+  if [[ -z "$org" ]]; then
+    org=$(cat ~/.sf/config.json 2>/dev/null | jq -r '."target-org" | select( . != null )')
+  fi
+  if [[ -z "$org" ]]; then
+    echo -e >&2 "\n $(tput setaf 1)Missing target org$(tput sgr 0)\n\n   Either provide with $(tput setaf 0)-o$(tput sgr 0) option, or set via $(tput setaf 0)sf config set target-org <org>$(tput sgr 0)"
+    exit 1
+  fi
+}
+
+org=""
 target=".data"
 object=""
 visidata=false
@@ -70,6 +83,7 @@ while [ $# -gt 0 ]; do
   esac
   shift
 done
+setTargetOrg
 
 if [ $refresh == true ]; then
   object=$(fd . ${target} -e csv -x echo {/.} | tr '\n' ',')

@@ -5,7 +5,6 @@
 #
 
 
-[ -z "$1" ] && echo >&2 "Org Alias required!" && exit 1
 org=$1
 publish=false
 
@@ -39,6 +38,7 @@ uniq_options=($(for option in "${options[@]}"; do echo "${option}"; done | sort 
 
 if [[ ${#uniq_options[@]} == 0 ]]; then
   echo -e " $(tput setaf 1)git index is empty, nothing to deploy$(tput sgr0) ...\n"
+  exit 1
 else
   echo -e " $(tput setaf 2)found ${#options[@]} file$([[ ! ${#options[@]} -eq 1 ]] && echo "s") and ${#uniq_options[@]} metadata-entit$([[ ${#uniq_options[@]} -eq 1 ]] && echo "y" || echo "ies") to deploy$(tput sgr0) ...\n"
   opts=''
