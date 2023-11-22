@@ -17,7 +17,7 @@
 # EXAMPLES
 #
 #     sf-data -s Account -d .
-#     sf-data -s Account -s Contact -o b2buat
+#     sf-data -s Account -s Contact
 #
 
 yesno() {

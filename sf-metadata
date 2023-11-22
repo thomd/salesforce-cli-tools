@@ -5,7 +5,7 @@
 #
 # USAGE
 #
-#    sf-metadata -o ALIAS                  # retrieve metadata from ALIAS org [default: b2bdev2]
+#    sf-metadata -o ALIAS                  # retrieve metadata from ALIAS org
 #    sf-metadata                           # retrieve all metadata
 #    sf-metadata -m NAME1 -m NAME2         # retrieve metadata for NAME1 and NAME2
 #    sf-metadata -x                        # retrieve metadata based on manifest/package.xml
