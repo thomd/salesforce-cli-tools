@@ -2,7 +2,7 @@
 
 A few CLI tools for my daily work with Salesforce.
 
-The scripts were created to fit my personal needs. They might not fit yours and might not work on your machine and might not fit to your project setup, so YMMV.
+**Disclaimer**: These scripts were created to fit my personal needs. They might not fit your needs, they might not work on your machine, they might not fit to your project setup.
 
 ## Install
 
