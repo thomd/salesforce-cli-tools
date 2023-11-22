@@ -1,8 +1,8 @@
 # Salesforce CLI Tools
 
-A few CLI tools for my daily work with Salesforce.
+A collection of bash scripts for my daily work with Salesforce.
 
-**Disclaimer**: These scripts were created to fit my personal needs. They might not fit your needs, they might not work on your machine, they might not fit to your project setup.
+**Disclaimer**: These scripts were created to fit my personal needs. They might not fit your needs, they might not work on your machine, they might not work with your project setup.
 
 ## Install
 
