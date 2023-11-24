@@ -67,7 +67,7 @@ showresult() {
   deployid=$(cat ${result} | grep "Deploy ID" | perl -pe 's/Deploy ID: (.*)/\1/')
   orgname=$(sf data query -q "SELECT Domain FROM Domain WHERE HttpsOption = 'CommunityAlt'" --json | jq -r '.result.records[].Domain' | perl -pe 's/(.+)--.+/\1/')
   deployurl="https://${orgname}--${1}.sandbox.lightning.force.com/lightning/setup/DeployStatus/page?address=/changemgmt/monitorDeploymentsDetails.apexp?asyncId=${deployid}"
-  echo -e "\n $(tput setaf 2)Deployment Status:$(tput sgr0)\n  ${deployurl}"
+  echo -e "\n $(tput setaf 1)Deployment Status:$(tput sgr0)\n  ${deployurl}"
 }
 
 deployAll() {
