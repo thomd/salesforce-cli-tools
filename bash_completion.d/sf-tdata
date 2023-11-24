@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 _sftooldata_completions() {
-    local cur prev names
+    local cur prev names alias
     cache="/tmp/sf-tooldata.sobjects"
     COMPREPLY=()
     cur="${COMP_WORDS[COMP_CWORD]}"
@@ -17,10 +17,15 @@ _sftooldata_completions() {
       curl -s "${url}/services/data/v59.0/tooling/sobjects/" -H "Authorization: Bearer ${token}" | jq -r '.sobjects[].name' | paste -sd' ' - > ${cache}
     fi
     names=$(cat ${cache})
+    alias=$(cat ~/.sfdx/alias.json | jq -r '.orgs | keys[]')
 
     case "${prev}" in
         -s|-v)
             COMPREPLY=($(compgen -W "${names}" -- ${cur}))
+            return 0
+            ;;
+        -o)
+            COMPREPLY=($(compgen -W "${alias}" -- ${cur}))
             return 0
             ;;
     esac

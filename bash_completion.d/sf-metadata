@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 _sfmetadata_completions() {
-    local cur prev names
+    local cur prev names alias
     cache="/tmp/sf-metadata.sobjects"
     COMPREPLY=()
     cur="${COMP_WORDS[COMP_CWORD]}"
@@ -15,10 +15,15 @@ _sfmetadata_completions() {
       sf org list metadata-types -o ${org} | jq -r '.metadataObjects[].xmlName' | paste -sd' ' - > ${cache}
     fi
     names=$(cat ${cache})
+    alias=$(cat ~/.sfdx/alias.json | jq -r '.orgs | keys[]')
 
     case "${prev}" in
         -m)
             COMPREPLY=($(compgen -W "${names}" -- ${cur}))
+            return 0
+            ;;
+        -o)
+            COMPREPLY=($(compgen -W "${alias}" -- ${cur}))
             return 0
             ;;
     esac

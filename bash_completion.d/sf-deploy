@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+
+_sfdeploy_completions() {
+    local cur prev alias
+    COMPREPLY=()
+    cur="${COMP_WORDS[COMP_CWORD]}"
+    prev="${COMP_WORDS[COMP_CWORD-1]}"
+    alias=$(cat ~/.sfdx/alias.json | jq -r '.orgs | keys[]')
+
+    case "${prev}" in
+        -o)
+            COMPREPLY=($(compgen -W "${alias}" -- ${cur}))
+            return 0
+            ;;
+    esac
+}
+
+complete -F _sfdeploy_completions sf-deploy
+

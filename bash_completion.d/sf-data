@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 _sfdata_completions() {
-    local cur prev names
+    local cur prev names alias
     cache="/tmp/sf-data.sobjects"
     COMPREPLY=()
     cur="${COMP_WORDS[COMP_CWORD]}"
@@ -15,10 +15,15 @@ _sfdata_completions() {
       sf sobject list -o ${org} -s all | paste -sd' ' - > ${cache}
     fi
     names=$(cat ${cache})
+    alias=$(cat ~/.sfdx/alias.json | jq -r '.orgs | keys[]')
 
     case "${prev}" in
         -s|-v)
             COMPREPLY=($(compgen -W "${names}" -- ${cur}))
+            return 0
+            ;;
+        -o)
+            COMPREPLY=($(compgen -W "${alias}" -- ${cur}))
             return 0
             ;;
     esac
