@@ -1,22 +1,67 @@
 #!/usr/bin/env bash
 
-alias=${1:-"scratch1"}
-duration=${2:-"1"}
-devhub=${3:-"DevHub"}
+#
+# Setup a new project and scratch org
+#
+# USAGE
+#
+#     sf-scratch -v <devhub>              # create scratch org from <devhub> [default: devhub]
+#     sf-scratch -a <alias>               # create scratch org with alias <alias> [default: scratch1]
+#     sf-scratch -d <days>                # create scratch org for <days> days [default: 1]
+#
+
+
 yesno() {
   echo ""
   read -p "$1 [Y/n] " response
   [[ $response == "n" || $response == "N" ]] && exit 1
 }
+
+devhub="devhub"
+duration="1"
+aliases=($(cat ~/.sfdx/alias.json | jq -r '.orgs | with_entries(select(.key | match("^scratch[0-9]+"))) | keys[] | sub("scratch";"")'))
+IFS=$'\n'
+alias="scratch$(echo "${aliases[*]}" | sort -n | awk '$0!=p+1{print p+1}{p=$0}END{print p+1}' | head -n 1)"
+unset IFS
+
+while [ $# -gt 0 ]; do
+  case $1 in
+    -v)
+      shift
+      devhub=$1
+      ;;
+    -a)
+      shift
+      alias=$1
+      ;;
+    -d)
+      shift
+      duration=$1
+      ;;
+    -h|--help)
+      cat $0 | sed -n '/^#/p' | sed '/^##/d' | sed 1d | sed 's/^#/ /g' \
+        | perl -pe "s/ #(.*)$/$(tput setaf 0)\1$(tput sgr 0)/" \
+        | perl -pe "s/(USAGE|EXAMPLES)/$(tput setaf 0)\1$(tput sgr 0)/"
+      exit 1
+      ;;
+    *)
+      ;;
+  esac
+  shift
+done
+
 yesno "Create a $(tput setaf 2)${duration} day$(tput sgr0) Scratch Org $(tput setaf 1)${alias}$(tput sgr0) from $(tput setaf 1)${devhub}$(tput sgr0) ?"
 
 [[ -f sfdx-project.json ]] && echo -e >&2 "$(tput setaf 1)\n You are already inside a Salesforce project!$(tput sgr0)" && exit 1
 
-sfdx project generate -x -n ${alias} && cd ${alias}
-cat config/project-scratch-def.json | jq '. += {"language": "en_US"}' > tmp; mv tmp config/project-scratch-def.json
+sf project generate -x -n ${alias} && cd ${alias}
+cat config/project-scratch-def.json \
+  | jq '.features += ["DebugApex"]' \
+  | jq '. += {"language": "en_US"}' \
+  > tmp; mv tmp config/project-scratch-def.json
 npm install
-sfdx org create scratch -f config/project-scratch-def.json -y ${duration} -v ${devhub} -a ${alias}
-sfdx config set target-org=${alias}
+sf org create scratch -f config/project-scratch-def.json -y ${duration} -v ${devhub} -a ${alias}
+sf config set target-org=${alias}
 sfdx force user password generate
 sfdx org display
 sfdx org open
