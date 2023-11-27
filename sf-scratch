@@ -131,8 +131,8 @@ exit 0
 #cat <<EOF > config/user-def.json
 #{
     #"Username": "`echo $username`.standard",
-    #"FirstName": "User",
-    #"LastName": "Standard User",
+    #"FirstName": "Standard",
+    #"LastName": "User",
     #"Email": "thomas.duerr@arvato-scs.com",
     #"Alias": "SUser",
     #"TimeZoneSidKey": "Europe/Berlin",
