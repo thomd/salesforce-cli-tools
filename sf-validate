@@ -42,7 +42,7 @@ while [ $# -gt 0 ]; do
       unittests=false
       ;;
     -h|--help)
-      cat $0 | sed -n '/^#/p' | sed '/^##/d' | sed 1d | sed 's/^#/ /g' \
+      awk '/^[^ #]/{c=1}c==0{print $0}' $0 | sed -n '/^#/p' | sed 1d | sed 's/^#/ /g' \
         | perl -pe "s/ #(.*)$/$(tput setaf 0)\1$(tput sgr 0)/" \
         | perl -pe "s/(USAGE|EXAMPLES)/$(tput setaf 0)\1$(tput sgr 0)/"
       exit 1
