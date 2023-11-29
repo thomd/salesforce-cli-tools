@@ -5,11 +5,11 @@
 #
 # USAGE
 #
-#     sf-deploy                     # watch & deploy changed files and files in git-index (or full build-deploy-publish if no files are changed)
-#     sf-deploy -o ALIAS            # deploy to ALIAS org
+#     sf-deploy                            # deploy files in git-index and -workspace in watch-mode (or build-deploy-publish if no files were changed)
+#     sf-deploy -o ALIAS                   # deploy to ALIAS org
 #
-#     sf-deploy -x                  # explicitly build, deploy and publish
-#     sf-deploy -i                  # explicitly deploy changed files
+#     sf-deploy -x                         # explicitly build, deploy and publish
+#     sf-deploy-m NAME1 -m NAME2           # deploy metadata for NAME1 and NAME2
 #
 
 yesno() {
@@ -34,8 +34,8 @@ setTargetOrg() {
 org=""
 appfolder="force-app"
 result=$(mktemp)
+names=""
 all=false
-index=false
 
 while [ $# -gt 0 ]; do
   case $1 in
@@ -43,11 +43,16 @@ while [ $# -gt 0 ]; do
       shift
       org=$1
       ;;
+    -m)
+      shift
+      if [[ $names == "" ]]; then
+        names="${1}"
+      else
+        names="${names} -m ${1}"
+      fi
+      ;;
     -x)
       all=true
-      ;;
-    -i)
-      index=true
       ;;
     -h|--help)
       awk '/^[^ #]/{c=1}c==0{print $0}' $0 | sed -n '/^#/p' | sed 1d | sed 's/^#/ /g' \
@@ -88,11 +93,14 @@ deployAll() {
 }
 
 
-if [[ $(git diff HEAD --name-only | wc -l | tr -d ' ') == 0 && $index == false || $all == true ]]; then
-  yesno " Build, Deploy and Publish to $(tput setaf 1)${org}$(tput sgr0) ?"
+if [[ ! $names == "" ]]; then
+  yesno " Deploy Metadata $(echo ${names} | perl -pe "s/ -m/,/g" | perl -pe "s/(\w+)/$(tput setaf 4)\1$(tput sgr0)/g") to $(tput setaf 1)${org}$(tput sgr0)?"
+  sf project deploy start -m ${names} -o ${org}
+elif [[ $(git diff HEAD --name-only | wc -l | tr -d ' ') == 0 || $all == true ]]; then
+  yesno " Build, Deploy and Publish to $(tput setaf 1)${org}$(tput sgr0)?"
   deployAll
 else
-  yesno " Deploy $(tput setaf 2)git index$(tput sgr0) to $(tput setaf 1)${org}$(tput sgr0) ?"
+  yesno " Deploy $(tput setaf 2)git index$(tput sgr0) to $(tput setaf 1)${org}$(tput sgr0)?"
   echo
   watchexec -w force-app -- sf-deploy-index ${org}
 fi
