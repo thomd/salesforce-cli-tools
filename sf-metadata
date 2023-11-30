@@ -74,10 +74,10 @@ if [[ $name == "all" ]]; then
     | jq -r '.metadataObjects[].xmlName' \
     | sed /ProcessFlowMigration/d \
     | sed /EventRelayConfig/d \
-    | sed /ExperienceContainer/d \
     | sed /SearchCustomization/d \
     | sed /RegisteredExternalService/d \
     | sed /PortalDelegablePermissionSet/d \
+    | sort \
     > ${names_list}
 else
   echo ${name} | tr -d ' ' | tr ',' '\n' > ${names_list}
