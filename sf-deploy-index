@@ -45,7 +45,7 @@ else
   for p in ${uniq_options[@]}; do
     opts="${opts} -m ${p}"
   done
-  echo -e " $(tput setaf 0)sf project deploy start -o ${org}${opts}$(tput sgr0)"
+  echo -e "   $(tput setaf 0)sf project deploy start -o ${org}${opts}$(tput sgr0)"
   echo
   sf project deploy start${opts} -o ${org}
   if [[ $publish == true ]]; then
