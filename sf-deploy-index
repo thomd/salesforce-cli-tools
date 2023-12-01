@@ -10,7 +10,7 @@ publish=false
 
 mapOption() {
   option=''
-  case $1 in
+  case "$1" in
     staticresources*)
       option="StaticResource:$(echo $1 | perl -pe 's#staticresources/(.+?)\..+#\1#')"
       ;;
@@ -19,6 +19,9 @@ mapOption() {
       ;;
     classes*)
       option="ApexClass:$(echo $1 | perl -pe 's#classes/(.+?)\..+#\1#')"
+      ;;
+    profiles*)
+      option="Profile:$(echo $1 | perl -pe 's#profiles/(.+?)\..+#\1#')"
       ;;
     experiences*)
       option="ExperienceBundle:$(echo $1 | perl -pe 's#experiences/(.+?)/.+#\1#')"
@@ -30,7 +33,7 @@ mapOption() {
 
 declare -a options
 while read f; do
-  path=$(echo $f | perl -pe 's#force-app/main/default/([^/]*)#\1#')
+  path=$(echo $f | perl -pe 's#force-app/main/default/([^/]*)#\1#' | sed 's/ /#/g')
   options=(${options[@]} "$(mapOption "${path}")")
 done < <(git diff HEAD --name-only)
 
@@ -43,11 +46,15 @@ else
   echo -e " $(tput setaf 2)found ${#options[@]} file$([[ ! ${#options[@]} -eq 1 ]] && echo "s") and ${#uniq_options[@]} metadata-entit$([[ ${#uniq_options[@]} -eq 1 ]] && echo "y" || echo "ies") to deploy$(tput sgr0) ...\n"
   opts=''
   for p in ${uniq_options[@]}; do
-    opts="${opts} -m ${p}"
+    if [[ $p = *"#"* ]]; then
+      opts="${opts} -m \"${p//#/ }\""
+    else
+      opts="${opts} -m ${p}"
+    fi
   done
   echo -e "   $(tput setaf 0)sf project deploy start -o ${org}${opts}$(tput sgr0)"
   echo
-  sf project deploy start${opts} -o ${org}
+  eval "sf project deploy start -o ${org}${opts}"
   if [[ $publish == true ]]; then
     name=$(sf data query -o ${org} -q "SELECT Name FROM Site WHERE UrlPathPrefix=''" --json | jq -r '.result.records[].Name')
     sf community publish -n ${name} -o ${org} >/dev/null

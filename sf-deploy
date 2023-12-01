@@ -95,7 +95,6 @@ deployAll() {
   git restore force-app/main/default/staticresources/b2bTheme.css
 }
 
-
 if [[ ! $names == "" ]]; then
   yesno " Deploy Metadata $(echo ${names} | perl -pe "s/ -m/,/g" | perl -pe "s/(\w+)/$(tput setaf 4)\1$(tput sgr0)/g") to $(tput setaf 1)${org}$(tput sgr0)?"
   echo -e "\n   $(tput setaf 0)sf project deploy start -m ${names} -o ${org}$(tput sgr0)\n"
