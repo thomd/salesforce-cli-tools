@@ -88,7 +88,7 @@ deployAll() {
     echo -e "\n   $(tput setaf 0)sf community publish -n ${name} -o ${org}$(tput sgr0)\n"
     sf community publish -n ${name} -o ${org} >/dev/null
     domain=$(sf data query -o ${org} -q "SELECT Domain FROM Domain WHERE HttpsOption='CommunityAlt'" --json | jq -r '.result.records[].Domain')
-    echo " $(tput setaf 2)Finish$(tput sgr0): ${domain}"
+    echo -e "\n $(tput setaf 2)Finish$(tput sgr0): ${domain}"
   else
     showresult ${org}
   fi
