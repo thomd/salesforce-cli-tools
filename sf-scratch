@@ -5,10 +5,10 @@
 #
 # USAGE
 #
-#     sf-scratch -v <devhub>                 # create scratch org from <devhub> [default: devhub]
+#     sf-scratch -v <devhub>                 # create scratch org from 'devhub'|'shape' [default: devhub]
 #     sf-scratch -a <alias>                  # create scratch org with alias <alias> [default: scratch1]
 #     sf-scratch -d <days>                   # create scratch org for <days> days [default: 1]
-#     sf-scratch -f <type>                   # create scratch org with a specific feature set: plain|b2b [default: b2b]
+#     sf-scratch -f <type>                   # create scratch org with a specific feature set 'plain'|'b2b' [default: b2b]
 #
 #     sf-scratch --delete <alias>            # delete scratch org
 #
