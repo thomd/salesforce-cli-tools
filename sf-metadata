@@ -66,6 +66,7 @@ if [[ $name == "" ]]; then
   yesno " Fetch $(tput setaf 4)${name}$(tput sgr0) metadata from $(tput setaf 1)${org}$(tput sgr0) ?"
 else
   names=$(echo ${name} | perl -pe "s/,/, /g" | perl -pe "s/(\w+)/$(tput setaf 4)\1$(tput sgr0)/g")
+  echo -e "\n   $(tput setaf 0)sf project retrieve start -o ${org} -m ${name//,/ -m }$(tput sgr0)"
   yesno " Fetch metadata ${names} from $(tput setaf 1)${org}$(tput sgr0) ?"
 fi
 
