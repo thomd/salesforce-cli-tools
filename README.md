@@ -29,7 +29,7 @@ The tools depend on the following non-standard CLI tools:
 
 Run `--help` or `-h` option to get a description of the tool and how to use it.
 
-## Exemplary Use Cases
+## Use Cases
 
 ### Compare Account Data between Orgs
 
@@ -58,5 +58,4 @@ File changes are detected automatically and deployed on change for ease of devel
 
     sf-deploy
 
-There are some pitfalls though, supposed you change a class which will then be deployed automatically and then revert the change, then this class is not
-detected as a change and not deplloyed. As a result, the changed class keeps deployed.
+There are some pitfalls though, supposed you create a new class which will then be deployed automatically and then remove the class, then this class will not be deleted on the org.
