@@ -22,6 +22,9 @@ mapOption() {
     profiles*)
       option="Profile:$(echo $1 | perl -pe 's#profiles/(.+?)\..+#\1#')"
       ;;
+    audience*)
+      option="Audience:$(echo $1 | perl -pe 's#audience/(.+?)\..+#\1#')"
+      ;;
     experiences*)
       option="ExperienceBundle:$(echo $1 | perl -pe 's#experiences/(.+?)/.+#\1#')"
       publish=true
