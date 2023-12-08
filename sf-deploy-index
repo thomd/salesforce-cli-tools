@@ -11,7 +11,7 @@ mapOption() {
   option=''
   case "$1" in
     staticresources*)
-      option="StaticResource:$(echo $1 | perl -pe 's#staticresources/(.+?)\..+#\1#')"
+      option="StaticResource:$(echo $1 | perl -pe 's#staticresources/(.+?)(/|\.).+#\1#')"
       ;;
     lwc*)
       option="LightningComponentBundle:$(echo $1 | perl -pe 's#lwc/(.+?)/.+#\1#')"
