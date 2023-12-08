@@ -35,6 +35,9 @@ mapOption() {
       option="ExperienceBundle:$(echo $1 | perl -pe 's#experiences/(.+?)/.+#\1#')"
       publish=true
       ;;
+    translations*)
+      option="Translations:$(echo $1 | perl -pe 's#translations/(.+?)\..+#\1#')"
+      ;;
   esac
   echo ${option}
 }
@@ -51,7 +54,7 @@ if [[ ${#uniq_options[@]} == 0 ]]; then
   echo -e " $(tput setaf 1)git index is empty, nothing to deploy$(tput sgr0) ...\n"
   exit 1
 else
-  echo -e " $(tput setaf 2)found ${#options[@]} file$([[ ! ${#options[@]} -eq 1 ]] && echo "s") in ${#uniq_options[@]} metadata-entit$([[ ${#uniq_options[@]} -eq 1 ]] && echo "y" || echo "ies") to deploy$(tput sgr0) ...\n"
+  echo -e " $(tput setaf 2)found ${#options[@]} file$([[ ! ${#options[@]} -eq 1 ]] && echo "s") for ${#uniq_options[@]} metadata-entit$([[ ${#uniq_options[@]} -eq 1 ]] && echo "y" || echo "ies") to deploy$(tput sgr0) ...\n"
   opts=''
   for p in ${uniq_options[@]}; do
     if [[ $p = *"#"* ]]; then
