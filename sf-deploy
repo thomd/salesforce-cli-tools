@@ -83,12 +83,15 @@ deployAll() {
   echo -e "\n   $(tput setaf 0)sf project deploy start -x manifest/package.xml --concise -o ${org}$(tput sgr0)\n"
   sf project deploy start -x manifest/package.xml --concise -o ${org} > ${result}
   if [[ $? == 0 ]]; then
-    echo -e "\n $(tput setaf 2)Publish$(tput sgr0) ..."
-    name=$(sf data query -o ${org} -q "SELECT Name FROM Site WHERE UrlPathPrefix=''" --json | jq -r '.result.records[].Name')
-    echo -e "\n   $(tput setaf 0)sf community publish -n ${name} -o ${org}$(tput sgr0)\n"
-    sf community publish -n ${name} -o ${org} >/dev/null
+    echo -e "\n $(tput setaf 2)Publish$(tput sgr0) ...\n"
+    declare -a names
+    names=(${names[@]} "$(sf data query -o ${org} -q "SELECT Name FROM Site WHERE SiteType='ChatterNetwork'" --json | jq -r '.result.records[].Name')")
+    for name in ${names[@]}; do
+      echo -e "   $(tput setaf 0)sf community publish -n \"${name/_/ }\" -o ${org}$(tput sgr0)"
+      eval "sf community publish -n \"${name/_/ }\" -o ${org} >/dev/null"
+    done
     domain=$(sf data query -o ${org} -q "SELECT Domain FROM Domain WHERE HttpsOption='CommunityAlt'" --json | jq -r '.result.records[].Domain')
-    echo -e "\n $(tput setaf 2)Finish$(tput sgr0): ${domain}"
+    echo -e "\n\n $(tput setaf 2)Finish$(tput sgr0): ${domain}"
   else
     showresult ${org}
   fi
