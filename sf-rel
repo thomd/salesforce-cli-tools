@@ -5,14 +5,14 @@
 #
 # USAGE
 #
-#     sf-rel <id>                               # extract records related to <id>
-#     sf-rel -l 2                               # extract down to level 2 [default: 1]
-#     sf-rel -r                                 # restore original csv files
+#     sf-rel <id>                                      # extract records related to <id>
+#     sf-rel -l 2                                      # extract down to level 2 [default: 1]
+#     sf-rel -r                                        # restore original csv files
 #
 # EXAMPLES
 #
-#     sf-data -s Account -s User -s Contact     # download data into current directory
-#     sf-rel 0018E000027VckFQAS                 # extract records related to the account-id
+#     sf-data -s Account -s User -s Contact -d .       # download data into current directory
+#     sf-rel 0018E000027VckFQAS                        # extract records related to the account-id
 #
 
 level=1
