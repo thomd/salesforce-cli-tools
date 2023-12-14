@@ -65,12 +65,13 @@ showresult() {
 if [ $unittests == true ]; then
   yesno " Validate and run Unit Tests on $(tput setaf 1)${org}$(tput sgr0) ?"
   echo -e "\n $(tput setaf 2)Validate and run Unti Tests$(tput sgr0) ..."
-  echo -e "\n   $(tput setaf 0)sf project deploy validate -x manifest/package.xml -o ${org} -l RunSpecifiedTests [-t ...] $(tput sgr0)\n"
+  [[ -n $SF_CLI_TOOLS_DEBUG ]] && echo -e "\n   $(tput setaf 0)sf project deploy validate -x manifest/package.xml -o ${org} -l RunSpecifiedTests [-t ...] $(tput sgr0)\n"
   sf project deploy validate -x manifest/package.xml -l RunSpecifiedTests `sed s/,$// scripts/test/unit-test-list.txt | awk '{ printf(" -t %s", $0) }'` -o ${org} > ${result}
 else
   yesno " Validate on $(tput setaf 1)${org}$(tput sgr0) ?"
   echo -e "\n $(tput setaf 2)Validate$(tput sgr0) ..."
-  echo -e "\n   $(tput setaf 0)sf project deploy start -x manifest/package.xml -l NoTestRun --dry-run -o ${org}$(tput sgr0)\n"
+  [[ -n $SF_CLI_TOOLS_DEBUG ]] && echo -e "\n   $(tput setaf 0)sf project deploy start -x manifest/package.xml -l NoTestRun --dry-run -o ${org}$(tput sgr0)\n"
   sf project deploy start -x manifest/package.xml -l NoTestRun --dry-run -o ${org} > ${result}
 fi
 showresult ${org}
+

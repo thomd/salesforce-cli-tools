@@ -1,6 +1,6 @@
 # Salesforce CLI Tools
 
-A collection of bash scripts for my daily work with Salesforce.
+A collection of bash scripts for my daily work with Salesforce. The scripts are basically wrappers around the `sf(1)` cli tool from Salesforce.
 
 **Disclaimer**: These scripts were created to fit my personal needs. They might not fit your needs, they might not work on your machine, they might not work with your project setup.
 
@@ -28,6 +28,15 @@ The tools depend on the following non-standard CLI tools:
 ## Usage
 
 Run `--help` or `-h` option to get a description of the tool and how to use it.
+
+Export environment valiable `SF_CLI_TOOLS_DEBUG` to print the underlying call with `sf(1)` like
+
+    export SF_CLI_TOOLS_DEBUG=1
+    sf-deploy
+
+or
+
+    SF_CLI_TOOLS_DEBUG=1 sf-deploy
 
 ## Use Cases
 
