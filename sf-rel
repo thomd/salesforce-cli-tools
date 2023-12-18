@@ -61,7 +61,7 @@ while read f; do
   cols=("OwnerId" "CreatedById" "LastModifiedById" "RecordTypeId" "ProfileId")
   for col in ${cols[@]}
   do
-    csvcut -n "$f" | grep $col > /dev/null
+    csvcut -n "$f" | rg "\b${col}\b" > /dev/null
     if [ $? == 0 ]; then
       csvcut -C "$col" "$f" > ${tmp}
       mv ${tmp} "$f"
