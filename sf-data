@@ -100,7 +100,7 @@ yesno " Fetch $([[ ${objects} == "" ]] && echo "$(tput setaf 4)all$(tput sgr0)" 
 if [ $visidata == true ]; then
   echo ""
   target=$(mktemp)
-  [[ -n $SF_CLI_TOOLS_DEBUG ]] && echo -e "   $(tput setaf 0)sf data query -q \"SELECT `sf sobject describe -o ${org} -s ${object} | jq -r '.fields[].name' | paste -sd, -` FROM ${object}\" -o ${org}$(tput sgr0)\n"
+  [[ $DEBUG == "1" ]] && echo -e "   $(tput setaf 0)sf data query -q \"SELECT `sf sobject describe -o ${org} -s ${object} | jq -r '.fields[].name' | paste -sd, -` FROM ${object}\" -o ${org}$(tput sgr0)\n"
   sf data query -q "SELECT `sf sobject describe -o ${org} -s ${object} | jq -r '.fields[].name' | paste -sd, -` FROM ${object}" -o ${org} -r csv > "${target}"
   vd "${target}"
   exit 0

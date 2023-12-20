@@ -66,11 +66,11 @@ else
       opts="${opts} -m ${p}"
     fi
   done
-  [[ -n $SF_CLI_TOOLS_DEBUG ]] && echo -e "   $(tput setaf 0)sf project deploy start -o ${org}${opts}$(tput sgr0)\n"
+  [[ $DEBUG == "1" ]] && echo -e "   $(tput setaf 0)sf project deploy start -o ${org}${opts}$(tput sgr0)\n"
   eval "sf project deploy start -o ${org}${opts}"
   if [[ $publish == true ]]; then
     name=$(sf data query -o ${org} -q "SELECT Name FROM Site WHERE UrlPathPrefix=''" --json | jq -r '.result.records[].Name')
-    [[ -n $SF_CLI_TOOLS_DEBUG ]] && echo -e "   $(tput setaf 0)sf community publish -n ${name} -o ${org}$(tput sgr0)\n"
+    [[ $DEBUG == "1" ]] && echo -e "   $(tput setaf 0)sf community publish -n ${name} -o ${org}$(tput sgr0)\n"
     sf community publish -n ${name} -o ${org} >/dev/null
   fi
   echo -e " $(tput setaf 2)waiting for changes$(tput sgr0) ...\n"

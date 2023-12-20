@@ -100,7 +100,7 @@ mkdir -p ${target}
 c=0
 while read obj; do
   c=$((c+1))
-  [[ -n $SF_CLI_TOOLS_DEBUG ]] && echo -e "\n $(tput setaf 8)[${c}/${total}]$(tput sgr0) $(tput setaf 4)${obj}$(tput sgr0):"
+  [[ $DEBUG == "1" ]] && echo -e "\n $(tput setaf 8)[${c}/${total}]$(tput sgr0) $(tput setaf 4)${obj}$(tput sgr0):"
   fields=$(sf sobject describe -t -s ${obj} -o ${org} | jq -r '.fields[] | select(.name == "FullName" or .name == "Metadata" | not) | .name' | paste -sd, -)
   sf data query -q "SELECT ${fields} FROM ${obj}" -t -o ${org} -r csv > ${target}/${obj}.csv
     wc -l ${target}/${obj}.csv | awk '{if($1 == "0" || $1 == "1"){ print " " $2 ": \033[31mempty" } else { print " " $2 ": \033[32m" $1-1 " records" } }'

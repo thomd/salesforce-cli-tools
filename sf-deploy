@@ -80,14 +80,14 @@ deployAll() {
   echo -e "\n   $(tput setaf 0)(cd frontend && npm run frontend:build)$(tput sgr0)\n"
   (cd frontend && npm run frontend:build >/dev/null)
   echo " $(tput setaf 2)Deploy$(tput sgr0) ..."
-  [[ -n $SF_CLI_TOOLS_DEBUG ]] && echo -e "\n   $(tput setaf 0)sf project deploy start -x manifest/package.xml --concise -o ${org}$(tput sgr0)\n"
+  [[ $DEBUG == "1" ]] && echo -e "\n   $(tput setaf 0)sf project deploy start -x manifest/package.xml --concise -o ${org}$(tput sgr0)\n"
   sf project deploy start -x manifest/package.xml --concise -o ${org} > ${result}
   if [[ $? == 0 ]]; then
     echo -e "\n $(tput setaf 2)Publish$(tput sgr0) ...\n"
     declare -a names
     names=(${names[@]} "$(sf data query -o ${org} -q "SELECT Name FROM Site WHERE SiteType='ChatterNetwork'" --json | jq -r '.result.records[].Name')")
     for name in ${names[@]}; do
-      [[ -n $SF_CLI_TOOLS_DEBUG ]] && echo -e "   $(tput setaf 0)sf community publish -n \"${name/_/ }\" -o ${org}$(tput sgr0)"
+      [[ $DEBUG == "1" ]] && echo -e "   $(tput setaf 0)sf community publish -n \"${name/_/ }\" -o ${org}$(tput sgr0)"
       eval "sf community publish -n \"${name/_/ }\" -o ${org} >/dev/null"
     done
     domain=$(sf data query -o ${org} -q "SELECT Domain FROM Domain WHERE HttpsOption='CommunityAlt'" --json | jq -r '.result.records[].Domain')
@@ -100,7 +100,7 @@ deployAll() {
 
 if [[ ! $names == "" ]]; then
   yesno " Deploy Metadata $(echo ${names} | perl -pe "s/ -m/,/g" | perl -pe "s/(\w+)/$(tput setaf 4)\1$(tput sgr0)/g") to $(tput setaf 1)${org}$(tput sgr0)?"
-  [[ -n $SF_CLI_TOOLS_DEBUG ]] && echo -e "\n   $(tput setaf 0)sf project deploy start -m ${names} -o ${org}$(tput sgr0)\n"
+  [[ $DEBUG == "1" ]] && echo -e "\n   $(tput setaf 0)sf project deploy start -m ${names} -o ${org}$(tput sgr0)\n"
   sf project deploy start -m ${names} -o ${org}
 elif [[ $(git diff HEAD --name-only | wc -l | tr -d ' ') == 0 || $all == true ]]; then
   yesno " Build, Deploy and Publish to $(tput setaf 1)${org}$(tput sgr0)?"

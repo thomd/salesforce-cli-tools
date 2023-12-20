@@ -29,14 +29,14 @@ The tools depend on the following non-standard CLI tools:
 
 Run `--help` or `-h` option to get a description of the tool and how to use it.
 
-Export environment valiable `SF_CLI_TOOLS_DEBUG` to print the underlying call with `sf(1)` like
+Export environment valiable `DEBUG` to print the underlying call with `sf(1)` like
 
-    export SF_CLI_TOOLS_DEBUG=1
+    export DEBUG=1
     sf-deploy
 
 or
 
-    SF_CLI_TOOLS_DEBUG=1 sf-deploy
+    DEBUG=1 sf-deploy
 
 ## Use Cases
 
