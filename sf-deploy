@@ -77,7 +77,7 @@ showresult() {
 
 deployAll() {
   echo -e "\n $(tput setaf 2)Build Frontend CSS$(tput sgr0) ..."
-  echo -e "\n   $(tput setaf 0)(cd frontend && npm run frontend:build)$(tput sgr0)\n"
+  [[ $DEBUG == "1" ]] && echo -e "\n   $(tput setaf 0)(cd frontend && npm run frontend:build)$(tput sgr0)\n"
   (cd frontend && npm run frontend:build >/dev/null)
   echo " $(tput setaf 2)Deploy$(tput sgr0) ..."
   [[ $DEBUG == "1" ]] && echo -e "\n   $(tput setaf 0)sf project deploy start -x manifest/package.xml --concise -o ${org}$(tput sgr0)\n"
@@ -91,7 +91,7 @@ deployAll() {
       eval "sf community publish -n \"${name/_/ }\" -o ${org} >/dev/null"
     done
     domain=$(sf data query -o ${org} -q "SELECT Domain FROM Domain WHERE HttpsOption='CommunityAlt'" --json | jq -r '.result.records[].Domain')
-    echo -e "\n\n $(tput setaf 2)Finish$(tput sgr0): ${domain}"
+    echo -e "\n $(tput setaf 2)Finish$(tput sgr0): ${domain}"
   else
     showresult ${org}
   fi
