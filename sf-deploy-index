@@ -38,6 +38,9 @@ mapOption() {
     translations*)
       option="Translations:$(echo $1 | perl -pe 's#translations/(.+?)\..+#\1#')"
       ;;
+    webStoreTemplates*)
+      option="WebStoreTemplate:$(echo $1 | perl -pe 's#webStoreTemplates/(.+?)\..+#\1#')"
+      ;;
   esac
   echo ${option}
 }
