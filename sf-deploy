@@ -14,16 +14,16 @@
 
 yesno() {
   echo ""
-  read -p "$1 [Y/n] " response
+  read -r -p "$1 [Y/n] " response
   [[ $response == "n" || $response == "N" ]] && exit 1
 }
 
 setTargetOrg() {
   if [[ -z "$org" ]]; then
-    org=$(cat .sf/config.json 2>/dev/null | jq -r '."target-org" | select( . != null )')
+    org=$(jq -r '."target-org" | select( . != null )' .sf/config.json 2>/dev/null)
   fi
   if [[ -z "$org" ]]; then
-    org=$(cat ~/.sf/config.json 2>/dev/null | jq -r '."target-org" | select( . != null )')
+    org=$(jq -r '."target-org" | select( . != null )' ~/.sf/config.json 2>/dev/null)
   fi
   if [[ -z "$org" ]]; then
     echo -e >&2 "\n $(tput setaf 1)Missing target org$(tput sgr 0)\n\n   Either provide with $(tput setaf 0)-o$(tput sgr 0) option, or set via $(tput setaf 0)sf config set target-org <org>$(tput sgr 0)"
@@ -32,7 +32,6 @@ setTargetOrg() {
 }
 
 org=""
-appfolder="force-app"
 result=$(mktemp)
 names=""
 all=false
@@ -55,7 +54,7 @@ while [ $# -gt 0 ]; do
       all=true
       ;;
     -h|--help)
-      awk '/^[^ #]/{c=1}c==0{print $0}' $0 | sed -n '/^#/p' | sed 1d | sed 's/^#/ /g' \
+      awk '/^[^ #]/{c=1}c==0{print $0}' "$0" | sed -n '/^#/p' | sed 1d | sed 's/^#/ /g' \
         | perl -pe "s/ #(.*)$/$(tput setaf 0)\1$(tput sgr 0)/" \
         | perl -pe "s/(USAGE|EXAMPLES)/$(tput setaf 0)\1$(tput sgr 0)/"
       exit 1
@@ -68,9 +67,9 @@ done
 setTargetOrg
 
 showresult() {
-  cat ${result} | sed 1,2d | perl -pe "s/(Component Failures \[\d+\])$/ $(tput setaf 1)\1$(tput sgr 0)/" | cut -c -$(tput cols)
-  deployid=$(cat ${result} | grep "Deploy ID" | perl -pe 's/Deploy ID: (.*)/\1/')
-  orgname=$(sf data query -q "SELECT Domain FROM Domain WHERE HttpsOption = 'CommunityAlt'" -o ${org} --json | jq -r '.result.records[].Domain' | perl -pe 's/(.+)--.+/\1/')
+  sed 1,2d "$result" | perl -pe "s/(Component Failures \[\d+\])$/ $(tput setaf 1)\1$(tput sgr 0)/" | cut -c -"$(tput cols)"
+  deployid=$(grep "Deploy ID" | perl -pe 's/Deploy ID: (.*)/\1/' "$result")
+  orgname=$(sf data query -q "SELECT Domain FROM Domain WHERE HttpsOption = 'CommunityAlt'" -o "$org" --json | jq -r '.result.records[].Domain' | perl -pe 's/(.+)--.+/\1/')
   deployurl="https://${orgname}--${1}.sandbox.lightning.force.com/lightning/setup/DeployStatus/page?address=/changemgmt/monitorDeploymentsDetails.apexp?asyncId=${deployid}"
   echo -e "\n $(tput setaf 1)Deployment Status:$(tput sgr0)\n  ${deployurl}"
 }
@@ -81,34 +80,39 @@ deployAll() {
   (cd frontend && npm run frontend:build >/dev/null)
   echo " $(tput setaf 2)Deploy$(tput sgr0) ..."
   [[ $DEBUG == "1" ]] && echo -e "\n   $(tput setaf 0)sf project deploy start -x manifest/package.xml --concise -o ${org}$(tput sgr0)\n"
-  sf project deploy start -x manifest/package.xml --concise -o ${org} > ${result}
+  sf project deploy start -x manifest/package.xml --concise -o "$org" > "$result"
+  # shellcheck disable=SC2181
   if [[ $? == 0 ]]; then
-    echo -e "\n $(tput setaf 2)Publish$(tput sgr0) ...\n"
-    declare -a names
-    names=(${names[@]} "$(sf data query -o ${org} -q "SELECT Name FROM Site WHERE SiteType='ChatterNetwork'" --json | jq -r '.result.records[].Name')")
-    for name in ${names[@]}; do
-      [[ $DEBUG == "1" ]] && echo -e "   $(tput setaf 0)sf community publish -n \"${name/_/ }\" -o ${org}$(tput sgr0)"
-      eval "sf community publish -n \"${name/_/ }\" -o ${org} >/dev/null"
+    echo -e "\n $(tput setaf 2)Publish$(tput sgr0) ..."
+    declare -a sitenames
+    sitenames=("${sitenames[@]}" "$(sf data query -o "$org" -q "SELECT Name FROM Site WHERE SiteType='ChatterNetwork'" --json | jq -r '.result.records[].Name')")
+    [[ $DEBUG == "1" ]] && echo
+    # shellcheck disable=SC2068
+    for sitename in ${sitenames[@]}; do
+      [[ $DEBUG == "1" ]] && echo -e "   $(tput setaf 0)sf community publish -n \"${sitename/_/ }\" -o ${org}$(tput sgr0)"
+      eval "sf community publish -n \"${sitename/_/ }\" -o ${org} >/dev/null"
     done
-    domain=$(sf data query -o ${org} -q "SELECT Domain FROM Domain WHERE HttpsOption='CommunityAlt'" --json | jq -r '.result.records[].Domain')
-    echo -e "\n $(tput setaf 2)Finish$(tput sgr0): ${domain}"
+    [[ $DEBUG == "1" ]] && echo
+    domain=$(sf data query -o "$org" -q "SELECT Domain FROM Domain WHERE HttpsOption='CommunityAlt'" --json | jq -r '.result.records[].Domain')
+    echo -e " $(tput setaf 2)Finish$(tput sgr0): ${domain}"
   else
-    showresult ${org}
+    showresult "$org"
   fi
   git restore force-app/main/default/staticresources/b2bTheme.css
 }
 
 if [[ ! $names == "" ]]; then
-  yesno " Deploy Metadata $(echo ${names} | perl -pe "s/ -m/,/g" | perl -pe "s/(\w+)/$(tput setaf 4)\1$(tput sgr0)/g") to $(tput setaf 1)${org}$(tput sgr0)?"
-  [[ $DEBUG == "1" ]] && echo -e "\n   $(tput setaf 0)sf project deploy start -m ${names} -o ${org}$(tput sgr0)\n"
-  sf project deploy start -m ${names} -o ${org}
+  yesno " Deploy Metadata $(echo "$names" | perl -pe "s/ -m/,/g" | perl -pe "s/(\w+)/$(tput setaf 4)\1$(tput sgr0)/g") to $(tput setaf 1)${org}$(tput sgr0)?"
+  echo
+  [[ $DEBUG == "1" ]] && echo -e "   $(tput setaf 0)sf project deploy start -o ${org} -m ${names}$(tput sgr0)\n"
+  eval "sf project deploy start -o ${org} -m ${names}"
 elif [[ $(git diff HEAD --name-only | wc -l | tr -d ' ') == 0 || $all == true ]]; then
   yesno " Build, Deploy and Publish to $(tput setaf 1)${org}$(tput sgr0)?"
   deployAll
 else
   yesno " Deploy $(tput setaf 2)git index$(tput sgr0) to $(tput setaf 1)${org}$(tput sgr0)?"
   echo
-  watchexec -w force-app -- sf-deploy-index ${org}
+  watchexec -w force-app -- sf-deploy-index "$org"
 fi
 
 
