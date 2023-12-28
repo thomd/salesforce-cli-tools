@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 #
-# given set of csv files (e.g. retrieved using `sf-data`), extract all records related to a given object id
+# given set of csv files (e.g. retrieved using 'sf-data'), extract all records related to a given object id
 #
 # USAGE
 #
@@ -20,10 +20,12 @@ id=000000000000000000
 ids=''
 rel_ids=$(mktemp)
 tmp=$(mktemp)
+dotfile="relations.dot"
 
 while [ $# -gt 0 ]; do
   case $1 in
     -r)
+      rm $dotfile
       fd -e orig -x mv {} {.}
       fd -e csv
       exit 1
@@ -51,12 +53,12 @@ if [ $id == '000' ]; then
   exit 1
 fi
 
-## backup
+# backup
 while read f; do
   [ ! -f "${f}.orig" ] && cp "$f" "${f}.orig"
 done < <(fd -I -e csv)
 
-## remove some columns we are not interested in
+# remove some columns we are not interested in
 while read f; do
   cols=("OwnerId" "CreatedById" "LastModifiedById" "RecordTypeId" "ProfileId")
   for col in ${cols[@]}
@@ -69,7 +71,7 @@ while read f; do
   done
 done < <(fd -I -e csv)
 
-## extract all IDs down to the given level
+# extract all IDs down to the given level
 if [ $level == 2 ]; then
   while read f; do
     cat "$f" | awk -v id=$id '$0 ~ id {print $0}' | tr ',' '\n' | perl -ne 'print if /^[0-9a-zA-Z]{18}$/' >> ${rel_ids}
@@ -80,7 +82,7 @@ else
   ids=${id}
 fi
 
-## extract related records from the available csv files
+# extract related records from the available csv files
 while read f; do
   cat "$f" | awk -v id=$ids '$0 ~ id || NR==1{print $0}' > ${tmp}
   lines=$(wc -l ${tmp} | awk '{print $1}')
@@ -91,3 +93,30 @@ while read f; do
     echo "extracted $(tput setaf 4)${f}$(tput sgr 0)"
   fi
 done < <(fd -I -e csv)
+
+# draw diagram
+ids=${id}
+while read -r f; do
+  while read -r col; do
+    if [[ "$col" == "Id" ]]; then
+      sobj="${f%.*}"
+    fi
+  done < <(csvtk transpose "$f" | rg "$ids" | csvtk cut -f 1)
+done < <(fd -I -e csv)
+echo "digraph {" > $dotfile
+echo "rankdir = LR" >> $dotfile
+while read -r f; do
+  obj=${f%.*}
+  dot="${obj} [ label = \"${obj}"
+  while read -r col; do
+    dot="${dot} \\n $(echo ${col} | csvtk cut -f 1): $(echo ${col} | csvtk cut -f 2)"
+  done < <(csvtk transpose "$f" | rg "$ids")
+  echo "${dot}\" ]" >> $dotfile
+  if [[ ! "$obj" == "$sobj" ]]; then
+    echo "${obj} -- ${sobj}" >> $dotfile
+  fi
+done < <(fd -I -e csv)
+echo "}" >> $dotfile
+echo
+cat $dotfile | graph-easy --from=dot --as=boxart | perl -pe "s/(${ids})/$(tput setaf 0)\1$(tput sgr 0)/g" | perl -pe "s/( ${sobj} )/$(tput setaf 2)\1$(tput sgr 0)/g"
+
