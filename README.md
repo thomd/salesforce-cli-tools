@@ -56,12 +56,28 @@ To automatically open retrieved data in VisiData without downloading into your l
 
 ### Inspect Relations of a given Object with other Objects of Interest
 
-Supposed you are interested in the realations of an Account `0018E000027VckFQAS` with User, Contact and AccountContactRelation:
+Supposed you are interested in the realations of an Account `0019O00000Dc70zQAB` with User, Contact and AccountContactRelation:
 
     sf-data -s Account -s User -s Contact -s AccountContactRelation
     cd .data
-    sf-rel -l 2 0018E000027VckFQAS
+    sf-rel -l 2 0019O00000Dc70zQAB
     vd *.csv
+
+`sf-rel` will also create a Graphviz dot file:
+
+    ┌───────────────────────────────┐     ┌─────────────────────────────────────────────────────┐     ┌───────────────────────────────┐
+    │    AccountContactRelation     │     │                      Account                        │     │             User              │
+    │ AccountId: 0019O00000Dc70zQAB │     │               Id: 0019O00000Dc70zQAB                │     │ AccountId: 0019O00000Dc70zQAB │
+    │                               │ ─── │ PhotoUrl: /services/images/photo/0019O00000Dc70zQAB │ ─── │                               │
+    └───────────────────────────────┘     └─────────────────────────────────────────────────────┘     └───────────────────────────────┘
+                                            │
+                                            │
+                                            │
+                                          ┌─────────────────────────────────────────────────────┐
+                                          │                       Contact                       │
+                                          │            AccountId: 0019O00000Dc70zQAB            │
+                                          └─────────────────────────────────────────────────────┘
+
 
 ### Deploy Files from Git Index to Org
 
