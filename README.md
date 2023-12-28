@@ -65,19 +65,7 @@ Supposed you are interested in the realations of an Account `0019O00000Dc70zQAB`
 
 `sf-rel` will also create a Graphviz dot file:
 
-    ┌───────────────────────────────┐     ┌─────────────────────────────────────────────────────┐     ┌───────────────────────────────┐
-    │    AccountContactRelation     │     │                      Account                        │     │             User              │
-    │ AccountId: 0019O00000Dc70zQAB │     │               Id: 0019O00000Dc70zQAB                │     │ AccountId: 0019O00000Dc70zQAB │
-    │                               │ ─── │ PhotoUrl: /services/images/photo/0019O00000Dc70zQAB │ ─── │                               │
-    └───────────────────────────────┘     └─────────────────────────────────────────────────────┘     └───────────────────────────────┘
-                                            │
-                                            │
-                                            │
-                                          ┌─────────────────────────────────────────────────────┐
-                                          │                       Contact                       │
-                                          │            AccountId: 0019O00000Dc70zQAB            │
-                                          └─────────────────────────────────────────────────────┘
-
+![sf-rel](doc/sf-rel.png)
 
 ### Deploy Files from Git Index to Org
 
