@@ -100,11 +100,14 @@ while read -r f; do
   while read -r col; do
     if [[ "$col" == "Id" ]]; then
       sobj="${f%.*}"
+      break 2
     fi
   done < <(csvtk transpose "$f" | rg "$ids" | csvtk cut -f 1)
 done < <(fd -I -e csv)
+
 echo "digraph {" > $dotfile
 echo "rankdir = LR" >> $dotfile
+
 while read -r f; do
   obj=${f%.*}
   dot="${obj} [ label = \"${obj}"
