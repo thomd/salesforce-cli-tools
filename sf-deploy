@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 #
-# Build-deploy-publish a project or single files to an Salesforce Org
+# Build-deploy-publish a project or deploy single files to a Salesforce Org
 #
 # USAGE
 #
@@ -9,7 +9,7 @@
 #     sf-deploy -o ALIAS                   # deploy to ALIAS org
 #
 #     sf-deploy -x                         # explicitly build, deploy and publish
-#     sf-deploy-m NAME1 -m NAME2           # deploy metadata for NAME1 and NAME2
+#     sf-deploy -m TYPE-1 -m TYPE-2        # deploy metadata for TYPE-1 and TYPE-2
 #
 
 yesno() {
