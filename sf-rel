@@ -8,7 +8,7 @@
 #     sf-rel <Id>                                          # extract records related to <id>
 #     sf-rel -l 2                                          # extract down to level 2 [default: 1]
 #     sf-rel -r                                            # restore original csv files
-#     sf-rel -g                                            # create graph
+#     sf-rel -s                                            # no output (silent)
 #
 # EXAMPLES
 #
@@ -20,7 +20,7 @@ id=000000000000000000
 ids=''
 rel_ids=$(mktemp)
 tmp=$(mktemp)
-graph=false
+silent=false
 
 show_help() {
   awk '/^[^ #]/{c=1}c==0{print $0}' $0 | sed -n '/^#/p' | sed 1d | sed 's/^#/ /g' \
@@ -39,8 +39,8 @@ while [ $# -gt 0 ]; do
       fd -e csv
       exit 1
       ;;
-    -g)
-      graph=true
+    -s)
+      silent=true
       ;;
     -l)
       shift
@@ -68,7 +68,9 @@ done < <(fd -I -e csv)
 
 # remove some columns we are not interested in
 while read f; do
+  echo "$f"
   csvtk cut -m -f -OwnerId,-CreatedById,-LastModifiedById,-RecordTypeId,-ProfileId "$f" > ${tmp}
+  mv ${tmp} "$f"
 done < <(fd -I -e csv)
 
 # extract all IDs down to the given level
@@ -90,12 +92,12 @@ while read f; do
     rm "$f"
   else
     mv ${tmp} "$f"
-    echo "extracted $(tput setaf 4)${f}$(tput sgr 0)"
+    [ $silent == false ] && echo "extracted $(tput setaf 4)${f}$(tput sgr 0)"
   fi
 done < <(fd -I -e csv)
 
 # draw diagram
-if [ $graph == true ]; then
+if [ $silent == false ]; then
   ids=${id}
   while read -r f; do
     while read -r col; do
