@@ -111,6 +111,7 @@ if [[ $object == "" ]]; then
   sf sobject list -o ${org} -s all \
     | sed /osf/d \
     | sed /Apex/d \
+    | sed /RecentlyViewed/d \
     | sed /SetupAuditTrail/d \
     | sed /UserLogin/d \
     | sed /FieldPermissions/d \
