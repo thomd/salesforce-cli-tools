@@ -36,8 +36,7 @@ while [ $# -gt 0 ]; do
   case $1 in
     -r)
       fd -e orig -x mv {} {.}
-      fd -e csv
-      exit 1
+      exit 0
       ;;
     -s)
       silent=true
@@ -109,16 +108,16 @@ if [ $silent == false ]; then
 
   dotfile="rel_${ids}.dot"
   echo "digraph {" > $dotfile
-  #echo "rankdir = LR" >> $dotfile
+  echo "rankdir=LR" >> $dotfile
 
   while read -r f; do
     obj=${f%.*}
     dot="${obj} [ label = \"#${obj}#"
     if [[ ! "$obj" == "$sobj" ]]; then
-      dot="${dot} \\n Id: _$(csvtk transpose "$f" | rg "^Id," | csvtk cut -f 2)_"
+      dot="${dot} \\n Id: ~$(csvtk transpose "$f" | rg "^Id," | csvtk cut -f 2)~"
     fi
     while read -r col; do
-      dot="${dot} \\n $(echo ${col} | csvtk cut -f 1): _$(echo ${col} | csvtk cut -f 2)_"
+      dot="${dot} \\n $(echo ${col} | csvtk cut -f 1): ~$(echo ${col} | csvtk cut -f 2)~"
     done < <(csvtk transpose "$f" | rg "$ids")
     echo "${dot}\" ]" >> $dotfile
     if [[ ! "$obj" == "$sobj" ]]; then
@@ -127,5 +126,5 @@ if [ $silent == false ]; then
   done < <(fd -I -e csv)
   echo "}" >> $dotfile
   echo
-  cat $dotfile | graph-easy --from=dot --as=boxart | perl -pe "s/#(.+?)#/ $(tput setaf 2)\1$(tput sgr 0) /g" | perl -pe "s/_(.+?)_/ $(tput setaf 0)\1$(tput sgr 0) /g"
+  cat $dotfile | graph-easy --from=dot --as=boxart | perl -pe "s/#(.+?)#/ $(tput setaf 2)\1$(tput sgr 0) /g" | perl -pe "s/~(.+?)~/ $(tput setaf 0)\1$(tput sgr 0) /g"
 fi
