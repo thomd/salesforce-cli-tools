@@ -68,7 +68,6 @@ done < <(fd -I -e csv)
 
 # remove some columns we are not interested in
 while read f; do
-  echo "$f"
   csvtk cut -m -f -OwnerId,-CreatedById,-LastModifiedById,-RecordTypeId,-ProfileId "$f" > ${tmp}
   mv ${tmp} "$f"
 done < <(fd -I -e csv)
