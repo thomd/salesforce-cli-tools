@@ -63,8 +63,10 @@ while read f; do
   cols=("OwnerId" "CreatedById" "LastModifiedById" "RecordTypeId" "ProfileId")
   for col in ${cols[@]}
   do
+    # FIXME: replace with csvtk
     csvcut -n "$f" | rg "\b${col}\b" > /dev/null
     if [ $? == 0 ]; then
+      # FIXME: replace with csvtk
       csvcut -C "$col" "$f" > ${tmp}
       mv ${tmp} "$f"
     fi
@@ -110,9 +112,12 @@ echo "rankdir = LR" >> $dotfile
 
 while read -r f; do
   obj=${f%.*}
-  dot="${obj} [ label = \"${obj}"
+  dot="${obj} [ label = \"#${obj}#"
+  if [[ ! "$obj" == "$sobj" ]]; then
+    dot="${dot} \\n Id: _$(csvtk transpose "$f" | rg "^Id," | csvtk cut -f 2)_"
+  fi
   while read -r col; do
-    dot="${dot} \\n $(echo ${col} | csvtk cut -f 1): $(echo ${col} | csvtk cut -f 2)"
+    dot="${dot} \\n $(echo ${col} | csvtk cut -f 1): _$(echo ${col} | csvtk cut -f 2)_"
   done < <(csvtk transpose "$f" | rg "$ids")
   echo "${dot}\" ]" >> $dotfile
   if [[ ! "$obj" == "$sobj" ]]; then
@@ -121,5 +126,5 @@ while read -r f; do
 done < <(fd -I -e csv)
 echo "}" >> $dotfile
 echo
-cat $dotfile | graph-easy --from=dot --as=boxart | perl -pe "s/(${ids})/$(tput setaf 0)\1$(tput sgr 0)/g" | perl -pe "s/( ${sobj} )/$(tput setaf 2)\1$(tput sgr 0)/g"
+cat $dotfile | graph-easy --from=dot --as=boxart | perl -pe "s/#(.+?)#/ $(tput setaf 2)\1$(tput sgr 0) /g" | perl -pe "s/_(.+?)_/ $(tput setaf 0)\1$(tput sgr 0) /g"
 
