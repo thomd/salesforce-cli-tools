@@ -1,18 +1,18 @@
 #!/usr/bin/env bash
 
 #
-# given set of csv files (e.g. retrieved using 'sf-data'), extract all records related to a given object id
+# given set of csv files (retrieved using 'sf-data'), extract all records related to a given object id
 #
 # USAGE
 #
-#     sf-rel <id>                                      # extract records related to <id>
-#     sf-rel -l 2                                      # extract down to level 2 [default: 1]
-#     sf-rel -r                                        # restore original csv files
+#     sf-rel <Id>                                          # extract records related to <id>
+#     sf-rel -l 2                                          # extract down to level 2 [default: 1]
+#     sf-rel -r                                            # restore original csv files
+#     sf-rel -g                                            # create graph
 #
 # EXAMPLES
 #
-#     sf-data -s Account -s User -s Contact -d .       # download data into current directory
-#     sf-rel 0018E000027VckFQAS                        # extract records related to the account-id
+#     sf-data; cd .data; sf-rel 0018E000027VckFQAS         # extract records related to the account-id
 #
 
 level=1
@@ -20,26 +20,34 @@ id=000000000000000000
 ids=''
 rel_ids=$(mktemp)
 tmp=$(mktemp)
-dotfile="relations.dot"
+graph=false
+
+show_help() {
+  awk '/^[^ #]/{c=1}c==0{print $0}' $0 | sed -n '/^#/p' | sed 1d | sed 's/^#/ /g' \
+    | perl -pe "s/ #(.*)$/$(tput setaf 0)\1$(tput sgr 0)/" \
+    | perl -pe "s/(USAGE|EXAMPLES)/$(tput setaf 0)\1$(tput sgr 0)/" \
+    | perl -pe "s/\`(.+)\`/$(tput sgr 0 1)\1$(tput sgr 0)/"
+  exit 1
+}
+
+[[ -z "$1" ]] && show_help
 
 while [ $# -gt 0 ]; do
   case $1 in
     -r)
-      rm $dotfile
       fd -e orig -x mv {} {.}
       fd -e csv
       exit 1
+      ;;
+    -g)
+      graph=true
       ;;
     -l)
       shift
       level=$1
       ;;
     -h|--help)
-      awk '/^[^ #]/{c=1}c==0{print $0}' $0 | sed -n '/^#/p' | sed 1d | sed 's/^#/ /g' \
-        | perl -pe "s/ #(.*)$/$(tput setaf 0)\1$(tput sgr 0)/" \
-        | perl -pe "s/(USAGE|EXAMPLES)/$(tput setaf 0)\1$(tput sgr 0)/" \
-        | perl -pe "s/\`(.+)\`/$(tput sgr 0 1)\1$(tput sgr 0)/"
-      exit 1
+      show_help
       ;;
     *)
       ;;
@@ -60,17 +68,7 @@ done < <(fd -I -e csv)
 
 # remove some columns we are not interested in
 while read f; do
-  cols=("OwnerId" "CreatedById" "LastModifiedById" "RecordTypeId" "ProfileId")
-  for col in ${cols[@]}
-  do
-    # FIXME: replace with csvtk
-    csvcut -n "$f" | rg "\b${col}\b" > /dev/null
-    if [ $? == 0 ]; then
-      # FIXME: replace with csvtk
-      csvcut -C "$col" "$f" > ${tmp}
-      mv ${tmp} "$f"
-    fi
-  done
+  csvtk cut -m -f -OwnerId,-CreatedById,-LastModifiedById,-RecordTypeId,-ProfileId "$f" > ${tmp}
 done < <(fd -I -e csv)
 
 # extract all IDs down to the given level
@@ -97,34 +95,36 @@ while read f; do
 done < <(fd -I -e csv)
 
 # draw diagram
-ids=${id}
-while read -r f; do
-  while read -r col; do
-    if [[ "$col" == "Id" ]]; then
-      sobj="${f%.*}"
-      break 2
+if [ $graph == true ]; then
+  ids=${id}
+  while read -r f; do
+    while read -r col; do
+      if [[ "$col" == "Id" ]]; then
+        sobj="${f%.*}"
+        break 2
+      fi
+    done < <(csvtk transpose "$f" | rg "$ids" | csvtk cut -f 1)
+  done < <(fd -I -e csv)
+
+  dotfile="rel_${ids}.dot"
+  echo "digraph {" > $dotfile
+  #echo "rankdir = LR" >> $dotfile
+
+  while read -r f; do
+    obj=${f%.*}
+    dot="${obj} [ label = \"#${obj}#"
+    if [[ ! "$obj" == "$sobj" ]]; then
+      dot="${dot} \\n Id: _$(csvtk transpose "$f" | rg "^Id," | csvtk cut -f 2)_"
     fi
-  done < <(csvtk transpose "$f" | rg "$ids" | csvtk cut -f 1)
-done < <(fd -I -e csv)
-
-echo "digraph {" > $dotfile
-echo "rankdir = LR" >> $dotfile
-
-while read -r f; do
-  obj=${f%.*}
-  dot="${obj} [ label = \"#${obj}#"
-  if [[ ! "$obj" == "$sobj" ]]; then
-    dot="${dot} \\n Id: _$(csvtk transpose "$f" | rg "^Id," | csvtk cut -f 2)_"
-  fi
-  while read -r col; do
-    dot="${dot} \\n $(echo ${col} | csvtk cut -f 1): _$(echo ${col} | csvtk cut -f 2)_"
-  done < <(csvtk transpose "$f" | rg "$ids")
-  echo "${dot}\" ]" >> $dotfile
-  if [[ ! "$obj" == "$sobj" ]]; then
-    echo "${obj} -- ${sobj}" >> $dotfile
-  fi
-done < <(fd -I -e csv)
-echo "}" >> $dotfile
-echo
-cat $dotfile | graph-easy --from=dot --as=boxart | perl -pe "s/#(.+?)#/ $(tput setaf 2)\1$(tput sgr 0) /g" | perl -pe "s/_(.+?)_/ $(tput setaf 0)\1$(tput sgr 0) /g"
-
+    while read -r col; do
+      dot="${dot} \\n $(echo ${col} | csvtk cut -f 1): _$(echo ${col} | csvtk cut -f 2)_"
+    done < <(csvtk transpose "$f" | rg "$ids")
+    echo "${dot}\" ]" >> $dotfile
+    if [[ ! "$obj" == "$sobj" ]]; then
+      echo "${obj} -- ${sobj}" >> $dotfile
+    fi
+  done < <(fd -I -e csv)
+  echo "}" >> $dotfile
+  echo
+  cat $dotfile | graph-easy --from=dot --as=boxart | perl -pe "s/#(.+?)#/ $(tput setaf 2)\1$(tput sgr 0) /g" | perl -pe "s/_(.+?)_/ $(tput setaf 0)\1$(tput sgr 0) /g"
+fi

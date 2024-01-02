@@ -22,7 +22,6 @@ The tools depend on the following non-standard CLI tools:
 * [jq](https://jqlang.github.io/jq): `brew install jq`
 * [VisiData](https://www.visidata.org): `brew install saulpw/vd/visidata`
 * [daff](https://paulfitz.github.io/daff): `npm install -g daff`
-* [csvkit](https://csvkit.readthedocs.io/en/latest): `brew install csvkit`
 * [csvtk](https://bioinf.shenwei.me/csvtk): `brew install csvtk`
 * [graph-easy](https://metacpan.org/release/TELS/Graph-Easy-0.64): `brew install cpanminus; cpan Graph::Easy`
 * [watchexec-cli](https://crates.io/crates/watchexec-cli): `brew install watchexec`
