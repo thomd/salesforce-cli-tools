@@ -55,12 +55,11 @@ To automatically open retrieved data in VisiData without downloading into your l
 
 ### Inspect Relations of a given Object with other Objects of Interest
 
-Supposed you are interested in the realations of an Account `0019O00000Dc70zQAB` with User, Contact and AccountContactRelation:
+Supposed you are interested in the realations of an Account, e.g. `0019O00000Dc70zQAB`, with User, Contact and AccountContactRelation:
 
     sf-data -s Account -s User -s Contact -s AccountContactRelation
     cd .data
-    sf-rel -l 2 0019O00000Dc70zQAB
-    vd *.csv
+    sf-rel 0019O00000Dc70zQAB
 
 ### Deploy Files from Git Index to Org
 
