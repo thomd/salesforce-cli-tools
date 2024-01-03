@@ -112,12 +112,16 @@ if [ $silent == false ]; then
 
   while read -r f; do
     obj=${f%.*}
-    dot="${obj} [ label = \"#${obj}#"
+    if [[ "$obj" == "$sobj" ]]; then
+      dot="${obj} [ label = \"@${obj}@"
+    else
+      dot="${obj} [ label = \"#${obj}#"
+    fi
     if [[ ! "$obj" == "$sobj" ]]; then
-      dot="${dot} \\n Id: ~$(csvtk transpose "$f" | rg "^Id," | csvtk cut -f 2)~"
+      dot="${dot} \\n Id:~$(csvtk transpose "$f" | rg "^Id," | csvtk cut -f 2)~"
     fi
     while read -r col; do
-      dot="${dot} \\n $(echo ${col} | csvtk cut -f 1): ~$(echo ${col} | csvtk cut -f 2)~"
+      dot="${dot} \\n $(echo ${col} | csvtk cut -f 1):~$(echo ${col} | csvtk cut -f 2)~"
     done < <(csvtk transpose "$f" | rg "$ids")
     echo "${dot}\" ]" >> $dotfile
     if [[ ! "$obj" == "$sobj" ]]; then
@@ -126,5 +130,9 @@ if [ $silent == false ]; then
   done < <(fd -I -e csv)
   echo "}" >> $dotfile
   echo
-  cat $dotfile | graph-easy --from=dot --as=boxart | perl -pe "s/#(.+?)#/ $(tput setaf 2)\1$(tput sgr 0) /g" | perl -pe "s/~(.+?)~/ $(tput setaf 0)\1$(tput sgr 0) /g"
+  cat $dotfile \
+    | graph-easy --from=dot --as=boxart \
+    | perl -pe "s/@(.+?)@/ $(tput setaf 1)\1$(tput sgr 0) /g" \
+    | perl -pe "s/#(.+?)#/ $(tput setaf 2)\1$(tput sgr 0) /g" \
+    | perl -pe "s/~(.+?)~/ $(tput setaf 0)\1$(tput sgr 0) /g"
 fi
