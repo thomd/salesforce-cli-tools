@@ -62,10 +62,6 @@ Supposed you are interested in the realations of an Account `0019O00000Dc70zQAB`
     sf-rel -l 2 0019O00000Dc70zQAB
     vd *.csv
 
-`sf-rel` will also create a Graphviz dot file:
-
-![sf-rel](doc/sf-rel.png)
-
 ### Deploy Files from Git Index to Org
 
 Only deploying the files you are working on is way faster that always deploying the full project. 
