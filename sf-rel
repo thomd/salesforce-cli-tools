@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 #
-# given set of csv files (retrieved using 'sf-data'), extract all records related to a given object id
+# Given set of csv files (retrieved using 'sf-data'), extract all records related to a given object Id
 #
 # USAGE
 #
@@ -12,7 +12,7 @@
 #
 # EXAMPLES
 #
-#     sf-data; cd .data; sf-rel 0018E000027VckFQAS         # extract records related to the account-id
+#     sf-data; cd .data; sf-rel 0018E000027VckFQAS         # extract records related to the account Id '0018E000027VckFQAS'
 #
 
 level=1
@@ -60,18 +60,18 @@ if [ $id == '000' ]; then
   exit 1
 fi
 
-# backup
+# backup 'object.csv' to 'object.csv.orig' for resoration
 while read f; do
   [ ! -f "${f}.orig" ] && cp "$f" "${f}.orig"
 done < <(fd -I -e csv)
 
-# remove some columns we are not interested in
+# remove some Id-columns we are not interested in
 while read f; do
   csvtk cut -m -f -OwnerId,-CreatedById,-LastModifiedById,-RecordTypeId,-ProfileId "$f" > ${tmp}
   mv ${tmp} "$f"
 done < <(fd -I -e csv)
 
-# extract all IDs down to the given level
+# extract all Ids down to the given level
 if [ $level == 2 ]; then
   while read f; do
     cat "$f" | awk -v id=$id '$0 ~ id {print $0}' | tr ',' '\n' | perl -ne 'print if /^[0-9a-zA-Z]{18}$/' >> ${rel_ids}
