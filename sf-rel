@@ -6,9 +6,10 @@
 # USAGE
 #
 #     sf-rel <Id>                                          # extract records related to <id>
-#     sf-rel -l 2                                          # extract down to level 2 [default: 1]
-#     sf-rel -r                                            # restore original csv files
-#     sf-rel -s                                            # no output (silent)
+#     sf-rel -s <Id>                                       # no output (silent)
+#     sf-rel -l 2 <Id>                                     # extract down to level 2 [default: 1]
+#
+#     sf-rel -r                                            # explicitly restore original csv files (they are also restored on every new usage of 'sf-rel')
 #
 # EXAMPLES
 #
@@ -55,12 +56,8 @@ while [ $# -gt 0 ]; do
   shift
 done
 
-if [ $id == '000' ]; then
-  echo -e "\n $(tput setaf 1)ID missing$(tput sgr 0)"
-  exit 1
-fi
-
-# backup 'object.csv' to 'object.csv.orig' for resoration
+# restore & backup 'object.csv' to 'object.csv.orig'
+fd -e orig -x mv {} {.}
 while read f; do
   [ ! -f "${f}.orig" ] && cp "$f" "${f}.orig"
 done < <(fd -I -e csv)
