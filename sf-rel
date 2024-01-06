@@ -7,8 +7,6 @@
 #
 #     sf-rel <Id>                                          # extract records related to <id>
 #     sf-rel -s <Id>                                       # no output (silent)
-#     sf-rel -l 2 <Id>                                     # extract down to level 2 [default: 1]
-#
 #     sf-rel -r                                            # explicitly restore original csv files (they are also restored on every new usage of 'sf-rel')
 #
 # EXAMPLES
@@ -18,7 +16,6 @@
 
 level=1
 id=000000000000000000
-ids=''
 rel_ids=$(mktemp)
 tmp=$(mktemp)
 silent=false
@@ -42,10 +39,6 @@ while [ $# -gt 0 ]; do
     -s)
       silent=true
       ;;
-    -l)
-      shift
-      level=$1
-      ;;
     -h|--help)
       show_help
       ;;
@@ -68,20 +61,9 @@ while read f; do
   mv ${tmp} "$f"
 done < <(fd -I -e csv)
 
-# extract all Ids down to the given level
-if [ $level == 2 ]; then
-  while read f; do
-    cat "$f" | awk -v id=$id '$0 ~ id {print $0}' | tr ',' '\n' | perl -ne 'print if /^[0-9a-zA-Z]{18}$/' >> ${rel_ids}
-  done < <(fd -I -e csv)
-  ids=$(cat ${rel_ids} | sort | uniq | tr '\n' '|')
-  ids=${ids%|}
-else
-  ids=${id}
-fi
-
-# extract related records from the available csv files
+# extract related records (all records having the given Id in a column) from all available csv files
 while read f; do
-  cat "$f" | awk -v id=$ids '$0 ~ id || NR==1{print $0}' > ${tmp}
+  cat "$f" | awk -v id=$id '$0 ~ id || NR==1{print $0}' > ${tmp}
   lines=$(wc -l ${tmp} | awk '{print $1}')
   if [[ ${lines} == 1 ]]; then
     rm "$f"
@@ -93,17 +75,16 @@ done < <(fd -I -e csv)
 
 # draw diagram
 if [ $silent == false ]; then
-  ids=${id}
   while read -r f; do
     while read -r col; do
       if [[ "$col" == "Id" ]]; then
         sobj="${f%.*}"
         break 2
       fi
-    done < <(csvtk transpose "$f" | rg "$ids" | csvtk cut -f 1)
+    done < <(csvtk transpose "$f" | rg "$id" | csvtk cut -f 1)
   done < <(fd -I -e csv)
 
-  dotfile="rel_${ids}.dot"
+  dotfile="rel_${id}.dot"
   echo "digraph {" > $dotfile
   #echo "rankdir=LR" >> $dotfile
 
@@ -119,7 +100,7 @@ if [ $silent == false ]; then
     fi
     while read -r col; do
       dot="${dot} \\n $(echo ${col} | csvtk cut -f 1):~$(echo ${col} | csvtk cut -f 2)"
-    done < <(csvtk transpose "$f" | rg "$ids")
+    done < <(csvtk transpose "$f" | rg "$id")
     echo "${dot}\" ]" >> $dotfile
     if [[ ! "$obj" == "$sobj" ]]; then
       echo "${obj} -- ${sobj}" >> $dotfile
