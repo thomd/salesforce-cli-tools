@@ -14,9 +14,6 @@
 #     sf-data; cd .data; sf-rel 0018E000027VckFQAS         # extract records related to the account Id '0018E000027VckFQAS'
 #
 
-level=1
-id=000000000000000000
-rel_ids=$(mktemp)
 tmp=$(mktemp)
 silent=false
 
@@ -86,7 +83,6 @@ if [ $silent == false ]; then
 
   dotfile="rel_${id}.dot"
   echo "digraph {" > $dotfile
-  #echo "rankdir=LR" >> $dotfile
 
   while read -r f; do
     obj=${f%.*}
