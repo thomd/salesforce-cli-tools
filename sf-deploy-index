@@ -19,6 +19,9 @@ mapOption() {
     classes*)
       option="ApexClass:$(echo $1 | perl -pe 's#classes/(.+?)\..+#\1#')"
       ;;
+    triggers*)
+      option="ApexTrigger:$(echo $1 | perl -pe 's#triggers/(.+?)\..+#\1#')"
+      ;;
     networks*)
       option="Network:$(echo $1 | perl -pe 's#networks/(.+?)\..+#\1#')"
       ;;
