@@ -22,6 +22,9 @@ mapOption() {
     triggers*)
       option="ApexTrigger:$(echo $1 | perl -pe 's#triggers/(.+?)\..+#\1#')"
       ;;
+    pages*)
+      option="ApexPage:$(echo $1 | perl -pe 's#pages/(.+?)\..+#\1#')"
+      ;;
     networks*)
       option="Network:$(echo $1 | perl -pe 's#networks/(.+?)\..+#\1#')"
       ;;
