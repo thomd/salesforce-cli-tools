@@ -16,6 +16,18 @@ mapOption() {
     lwc*)
       option="LightningComponentBundle:$(echo $1 | perl -pe 's#lwc/(.+?)/.+#\1#')"
       ;;
+    objects*)
+      object=$(echo $1 | perl -pe 's#objects/([^/]+?)/(.*)#\1#')
+      path=$(echo $1 | perl -pe 's#objects/([^/]+?)/(.*)#\2#' | sed 's/ /#/g')
+      case "$path" in
+        fields*)
+          option="CustomField:${object}.$(echo $path | perl -pe 's#fields/(.+?)\..+#\1#')"
+          ;;
+      esac
+      ;;
+    objectTranslations*)
+      option="CustomObjectTranslation:$(echo $1 | perl -pe 's#objectTranslations/([^/]+).*#\1#')"
+      ;;
     classes*)
       option="ApexClass:$(echo $1 | perl -pe 's#classes/(.+?)\..+#\1#')"
       ;;
