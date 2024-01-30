@@ -5,14 +5,29 @@
 #
 # USAGE
 #
-#     sf-validate -o ALIAS         # validate deployment with unit tests on ALIAS org
+#     sf-validate -o ORG           # validate deployment with unit tests on ORG
 #     sf-validate -n               # validate deployment without unit tests
+#
+# COMMANDS
+#
+#     TESTS=$(sed s/,$// scripts/test/unit-test-list.txt | awk '{ printf(" -t %s", $0) }')
+#     sf project deploy validate -x manifest/package.xml -l RunSpecifiedTests $TESTS -o ORG      # validate and run Unit Tests
+#
+#     sf project deploy start -x manifest/package.xml -l NoTestRun --dry-run -o ORG              # validate only
 #
 
 yesno() {
   echo ""
   read -p "$1 [Y/n] " response
   [[ $response == "n" || $response == "N" ]] && exit 1
+}
+
+show_help() {
+  awk '/^[^ #]/{c=1}c==0{print $0}' $0 | sed -n '/^#/p' | sed 1d | sed 's/^#/ /g' \
+    | perl -pe "s/ #(.*)$/$(tput setaf 0)\1$(tput sgr 0)/" \
+    | perl -pe "s/(USAGE|EXAMPLES|COMMANDS)/$(tput setaf 0)\1$(tput sgr 0)/" \
+    | perl -pe "s/\`(.+)\`/$(tput sgr 0 1)\1$(tput sgr 0)/"
+  exit 1
 }
 
 setTargetOrg() {
@@ -42,10 +57,7 @@ while [ $# -gt 0 ]; do
       unittests=false
       ;;
     -h|--help)
-      awk '/^[^ #]/{c=1}c==0{print $0}' $0 | sed -n '/^#/p' | sed 1d | sed 's/^#/ /g' \
-        | perl -pe "s/ #(.*)$/$(tput setaf 0)\1$(tput sgr 0)/" \
-        | perl -pe "s/(USAGE|EXAMPLES)/$(tput setaf 0)\1$(tput sgr 0)/"
-      exit 1
+      show_help
       ;;
     *)
       ;;
