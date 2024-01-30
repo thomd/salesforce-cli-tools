@@ -6,16 +6,30 @@
 # USAGE
 #
 #     sf-deploy                            # deploy files in git-index and -workspace in watch-mode (or build-deploy-publish if no files were changed)
-#     sf-deploy -o ALIAS                   # deploy to ALIAS org
+#     sf-deploy -o ORG                     # deploy to ORG
 #
 #     sf-deploy -x                         # explicitly build, deploy and publish (e.g. if git-index is not empty)
 #     sf-deploy -m TYPE-1 -m TYPE-2        # deploy metadata of TYPE-1 and TYPE-2
+#
+# COMMANDS
+#
+#     (cd frontend && npm run frontend:build)
+#     sf project deploy start -x manifest/package.xml --concise -o ORG
+#     sf community publish -n NAME -o ORG
 #
 
 yesno() {
   echo ""
   read -r -p "$1 [Y/n] " response
   [[ $response == "n" || $response == "N" ]] && exit 1
+}
+
+show_help() {
+  awk '/^[^ #]/{c=1}c==0{print $0}' $0 | sed -n '/^#/p' | sed 1d | sed 's/^#/ /g' \
+    | perl -pe "s/ #(.*)$/$(tput setaf 0)\1$(tput sgr 0)/" \
+    | perl -pe "s/(USAGE|EXAMPLES|COMMANDS)/$(tput setaf 0)\1$(tput sgr 0)/" \
+    | perl -pe "s/\`(.+)\`/$(tput sgr 0 1)\1$(tput sgr 0)/"
+  exit 1
 }
 
 setTargetOrg() {
@@ -54,10 +68,7 @@ while [ $# -gt 0 ]; do
       all=true
       ;;
     -h|--help)
-      awk '/^[^ #]/{c=1}c==0{print $0}' "$0" | sed -n '/^#/p' | sed 1d | sed 's/^#/ /g' \
-        | perl -pe "s/ #(.*)$/$(tput setaf 0)\1$(tput sgr 0)/" \
-        | perl -pe "s/(USAGE|EXAMPLES)/$(tput setaf 0)\1$(tput sgr 0)/"
-      exit 1
+      show_help
       ;;
     *)
       ;;
