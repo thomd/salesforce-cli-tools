@@ -11,9 +11,9 @@
 # COMMANDS
 #
 #     TESTS=$(sed s/,$// scripts/test/unit-test-list.txt | awk '{ printf(" -t %s", $0) }')
-#     sf project deploy validate -x manifest/package.xml -l RunSpecifiedTests $TESTS -o ORG      # validate and run Unit Tests
+#     sf project deploy validate -x manifest/package.xml -l RunSpecifiedTests $TESTS -o ORG             # validate and run specific unit-tests
 #
-#     sf project deploy start -x manifest/package.xml -l NoTestRun --dry-run -o ORG              # validate only
+#     sf project deploy start -x manifest/package.xml --dry-run --concise -l NoTestRun -o ORG           # validate only
 #
 
 yesno() {
