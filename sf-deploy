@@ -7,15 +7,15 @@
 #
 #     sf-deploy                            # deploy files in git-index and -workspace in watch-mode (or build-deploy-publish if no files were changed)
 #     sf-deploy -o ORG                     # deploy to ORG
-#
+#     sf-deploy -m NAME1 -m NAME2          # deploy metadata of NAME1 and NAME2
 #     sf-deploy -x                         # explicitly build, deploy and publish (e.g. if git-index is not empty)
-#     sf-deploy -m TYPE-1 -m TYPE-2        # deploy metadata of TYPE-1 and TYPE-2
 #
 # COMMANDS
 #
 #     (cd frontend && npm run frontend:build)
 #     sf project deploy start -x manifest/package.xml --concise -o ORG
-#     sf community publish -n NAME -o ORG
+#     sf project deploy start -o ORG -m NAME
+#     sf community publish -n SITE -o ORG
 #
 
 yesno() {
