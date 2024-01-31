@@ -5,11 +5,30 @@
 #
 # USAGE
 #
-#    sf-metadata -o ALIAS                  # retrieve metadata from ALIAS org
-#    sf-metadata                           # retrieve all metadata
-#    sf-metadata -m NAME1 -m NAME2         # retrieve metadata for NAME1 and NAME2
-#    sf-metadata -x                        # retrieve metadata based on manifest/package.xml
+#    sf-metadata                               # retrieve all metadata
+#    sf-metadata -o ORG                        # retrieve all metadata from ORG
+#    sf-metadata -m NAME1 -m NAME2             # retrieve metadata for type NAME1 and NAME2
+#    sf-metadata -x                            # retrieve metadata declared in manifest/package.xml
 #
+# COMMANDS
+#
+#    sf org list metadata-types -o ORG | jq -r '.metadataObjects[].xmlName'
+#    sf project retrieve start -o ORG -m NAME:MEMBER
+#
+
+yesno() {
+  echo ""
+  read -p "$1 [Y/n] " response
+  [[ $response == "n" || $response == "N" ]] && exit 1
+}
+
+show_help() {
+  awk '/^[^ #]/{c=1}c==0{print $0}' $0 | sed -n '/^#/p' | sed 1d | sed 's/^#/ /g' \
+    | perl -pe "s/ #(.*)$/$(tput setaf 0)\1$(tput sgr 0)/" \
+    | perl -pe "s/(USAGE|EXAMPLES|COMMANDS)/$(tput setaf 0)\1$(tput sgr 0)/" \
+    | perl -pe "s/\`(.+)\`/$(tput sgr 0 1)\1$(tput sgr 0)/"
+  exit 1
+}
 
 setTargetOrg() {
   if [[ -z "$org" ]]; then
@@ -28,12 +47,6 @@ org=""
 name=""
 names_list=$(mktemp)
 
-yesno() {
-  echo ""
-  read -p "$1 [Y/n] " response
-  [[ $response == "n" || $response == "N" ]] && exit 1
-}
-
 while [ $# -gt 0 ]; do
   case $1 in
     -o)
@@ -49,10 +62,7 @@ while [ $# -gt 0 ]; do
       fi
       ;;
     -h)
-      awk '/^[^ #]/{c=1}c==0{print $0}' $0 | sed -n '/^#/p' | sed 1d | sed 's/^#/ /g' \
-        | perl -pe "s/ #(.*)$/$(tput setaf 0)\1$(tput sgr 0)/" \
-        | perl -pe "s/(USAGE|EXAMPLES)/$(tput setaf 0)\1$(tput sgr 0)/"
-      exit 1
+      show_help
       ;;
     *)
       ;;
@@ -63,6 +73,7 @@ setTargetOrg
 
 if [[ $name == "" ]]; then
   name="all"
+  [[ $DEBUG == "1" ]] && echo -e "\n   $(tput setaf 0)sf org list metadata-types -o ${org} | jq -r '.metadataObjects[].xmlName'$(tput sgr0)"
   yesno " Fetch $(tput setaf 4)${name}$(tput sgr0) metadata from $(tput setaf 1)${org}$(tput sgr0) ?"
 else
   names=$(echo ${name} | perl -pe "s/,/, /g" | perl -pe "s/(\w+)/$(tput setaf 4)\1$(tput sgr0)/g")
