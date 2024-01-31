@@ -5,17 +5,19 @@
 #
 # USAGE
 #
-#     sf-rel <Id>                                          # extract records related to <id>
-#     sf-rel -s <Id>                                       # no output (silent)
-#     sf-rel -r                                            # explicitly restore original csv files (they are also restored on every new usage of 'sf-rel')
+#     sf-rel ID                                         # extract records related to ID
+#     sf-rel -s ID                                      # no output (silent)
+#     sf-rel -r ID                                      # restore original csv files
+#     sf-rel -R                                         # explicitly restore original csv files and remove dot files
 #
 # EXAMPLES
 #
-#     sf-data; cd .data; sf-rel 0018E000027VckFQAS         # extract records related to the account Id '0018E000027VckFQAS'
+#     sf-data; cd .data; sf-rel 0018E000027VckFQAS      # extract records related to the ID '0018E000027VckFQAS'
 #
 
 tmp=$(mktemp)
 silent=false
+restore=false
 
 show_help() {
   awk '/^[^ #]/{c=1}c==0{print $0}' $0 | sed -n '/^#/p' | sed 1d | sed 's/^#/ /g' \
@@ -29,9 +31,13 @@ show_help() {
 
 while [ $# -gt 0 ]; do
   case $1 in
-    -r)
+    -R)
       fd -e orig -x mv {} {.}
+      fd -e dot -x rm {}
       exit 0
+      ;;
+    -r)
+      restore=true
       ;;
     -s)
       silent=true
@@ -40,11 +46,13 @@ while [ $# -gt 0 ]; do
       show_help
       ;;
     *)
+      id=$1
+      [ ! "${#id}" -eq 18 ] && show_help
       ;;
   esac
-  id=$1
   shift
 done
+[ -z $id ] && show_help
 
 # restore & backup 'object.csv' to 'object.csv.orig'
 fd -e orig -x mv {} {.}
@@ -66,7 +74,7 @@ while read f; do
     rm "$f"
   else
     mv ${tmp} "$f"
-    [ $silent == false ] && echo "extracted $(tput setaf 4)${f}$(tput sgr 0)"
+    [ $silent == false -a $restore == false ] && echo "extracted $(tput setaf 4)${f}$(tput sgr 0)"
   fi
 done < <(fd -I -e csv)
 
@@ -109,4 +117,8 @@ if [ $silent == false ]; then
     | perl -pe "s/@(.+?) / $(tput setaf 1)\1$(tput sgr 0) /g" \
     | perl -pe "s/#(.+?) / $(tput setaf 2)\1$(tput sgr 0) /g" \
     | perl -pe "s/~(.+?) / $(tput setaf 0)\1$(tput sgr 0) /g"
+fi
+
+if [ $restore == true ]; then
+  fd -e orig -x mv {} {.}
 fi
