@@ -119,6 +119,10 @@ fi
 if [[ $object == "" ]]; then
   sf sobject list -o ${org} -s all \
     | sed /osf/d \
+    | sed /^ChangeRequest/d \
+    | sed /^Chatter/d \
+    | sed /^CollaborationGroup/d \
+    | sed /^CommSubscription/d \
     | sed /Apex/d \
     | sed /RecentlyViewed/d \
     | sed /SetupAuditTrail/d \
