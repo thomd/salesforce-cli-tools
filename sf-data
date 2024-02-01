@@ -118,7 +118,11 @@ fi
 # this is an opinionated list of sobjects which are either not of interest or do not support queries
 if [[ $object == "" ]]; then
   sf sobject list -o ${org} -s all \
+    | sed /^ProfileSkill/d \
+    | sed /^Promotion/d \
+    | sed /^Prompt/d \
     | sed /osf/d \
+    | sed /^Problem/d \
     | sed /^ChangeRequest/d \
     | sed /^Chatter/d \
     | sed /^CollaborationGroup/d \
