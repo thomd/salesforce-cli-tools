@@ -1,0 +1,73 @@
+#!/usr/bin/env bash
+
+#
+# Helper for managing and translating custom-labels
+#
+# USAGE
+#
+#     sf-labels                       # list custom labels on remote-org, local-metadata, package-manifest, translation-files and usage
+#     sf-labels -v                    # open in Visidata
+#     sf-labels -o ORG                # set ORG
+#     sf-labels -t                    # create nodes for missing translations in all translation meta files
+#     sf-labels -e                    # generate an Excel sheet with labels, categories and translations
+#
+
+yesno() {
+  echo ""
+  read -p "$1 [Y/n] " response
+  [[ $response == "n" || $response == "N" ]] && exit 1
+}
+
+show_help() {
+  awk '/^[^ #]/{c=1}c==0{print $0}' $0 | sed -n '/^#/p' | sed 1d | sed 's/^#/ /g' \
+    | perl -pe "s/ #(.*)$/$(tput setaf 0)\1$(tput sgr 0)/" \
+    | perl -pe "s/(USAGE|EXAMPLES|COMMANDS)/$(tput setaf 0)\1$(tput sgr 0)/" \
+    | perl -pe "s/\`(.+)\`/$(tput sgr 0 1)\1$(tput sgr 0)/"
+  exit 1
+}
+
+setTargetOrg() {
+  if [[ -z "$org" ]]; then
+    org=$(cat .sf/config.json 2>/dev/null | jq -r '."target-org" | select( . != null )')
+  fi
+  if [[ -z "$org" ]]; then
+    org=$(cat ~/.sf/config.json 2>/dev/null | jq -r '."target-org" | select( . != null )')
+  fi
+  if [[ -z "$org" ]]; then
+    echo -e >&2 "\n $(tput setaf 1)Missing target org$(tput sgr 0)\n\n   Either provide with $(tput setaf 0)-o$(tput sgr 0) option, or set via $(tput setaf 0)sf config set target-org <org>$(tput sgr 0)"
+    exit 1
+  fi
+}
+
+org=""
+visidata=false
+excel=false
+translations=false
+
+while [ $# -gt 0 ]; do
+  case $1 in
+    -o)
+      shift
+      org=$1
+      ;;
+    -t)
+      translations=true
+      ;;
+    -e)
+      refresh=true
+      ;;
+    -v)
+      visidata=true
+      ;;
+    -h|--help)
+      show_help
+      ;;
+    *)
+      ;;
+  esac
+  shift
+done
+setTargetOrg
+
+
+exit 0

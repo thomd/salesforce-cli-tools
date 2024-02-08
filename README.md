@@ -25,6 +25,7 @@ The tools depend on the following non-standard CLI tools:
 * [csvtk](https://bioinf.shenwei.me/csvtk): `brew install csvtk`
 * [graph-easy](https://metacpan.org/release/TELS/Graph-Easy-0.64): `brew install cpanminus; cpan Graph::Easy`
 * [watchexec-cli](https://crates.io/crates/watchexec-cli): `brew install watchexec`
+* [XMLStarlet](https://xmlstar.sourceforge.net/): `brew install xmlstarlet`
 
 ## Usage
 
