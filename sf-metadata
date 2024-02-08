@@ -100,7 +100,7 @@ total=$(cat ${names_list} | wc -l | tr -d ' ')
 c=0
 while read n; do
   c=$((c+1))
-  echo -e "\n $(tput setaf 8)[${c}/${total}]$(tput sgr0) $(tput setaf 4)${n}$(tput sgr0):"
+  echo -e "\n $(tput setaf 8)[${c}/${total}]$(tput sgr0) $(tput setaf 4)${n}$(tput sgr0)"
   sf project retrieve start -o ${org} -m ${n} > /dev/null
 done < <(cat ${names_list})
 
