@@ -23,6 +23,9 @@ mapOption() {
         fields*)
           option="CustomField:${object}.$(echo $path | perl -pe 's#fields/(.+?)\..+#\1#')"
           ;;
+        *)
+          option="CustomObject:${object}"
+          ;;
       esac
       ;;
     objectTranslations*)
