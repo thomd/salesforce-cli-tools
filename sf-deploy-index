@@ -10,11 +10,24 @@ publish=false
 mapOption() {
   option=''
   case "$1" in
-    staticresources*)
-      option="StaticResource:$(echo $1 | perl -pe 's#staticresources/(.+?)(/|\.).+#\1#')"
+    audience*)
+      option="Audience:$(echo $1 | perl -pe 's#audience/(.+?)\..+#\1#')"
+      ;;
+    classes*)
+      option="ApexClass:$(echo $1 | perl -pe 's#classes/(.+?)\..+#\1#')"
+      ;;
+    experiences*)
+      option="ExperienceBundle:$(echo $1 | perl -pe 's#experiences/(.+?)/.+#\1#')"
+      publish=true
+      ;;
+    globalValueSets*)
+      option="GlobalValueSet:$(echo $1 | perl -pe 's#globalValueSets/(.+?)\..+#\1#')"
       ;;
     lwc*)
       option="LightningComponentBundle:$(echo $1 | perl -pe 's#lwc/(.+?)/.+#\1#')"
+      ;;
+    networks*)
+      option="Network:$(echo $1 | perl -pe 's#networks/(.+?)\..+#\1#')"
       ;;
     objects*)
       object=$(echo $1 | perl -pe 's#objects/([^/]+?)/(.*)#\1#')
@@ -37,39 +50,26 @@ mapOption() {
     objectTranslations*)
       option="CustomObjectTranslation:$(echo $1 | perl -pe 's#objectTranslations/([^/]+).*#\1#')"
       ;;
-    classes*)
-      option="ApexClass:$(echo $1 | perl -pe 's#classes/(.+?)\..+#\1#')"
-      ;;
-    triggers*)
-      option="ApexTrigger:$(echo $1 | perl -pe 's#triggers/(.+?)\..+#\1#')"
-      ;;
     pages*)
       option="ApexPage:$(echo $1 | perl -pe 's#pages/(.+?)\..+#\1#')"
-      ;;
-    globalValueSets*)
-      option="GlobalValueSet:$(echo $1 | perl -pe 's#globalValueSets/(.+?)\..+#\1#')"
-      ;;
-    networks*)
-      option="Network:$(echo $1 | perl -pe 's#networks/(.+?)\..+#\1#')"
-      ;;
-    sites*)
-      option="CustomSite:$(echo $1 | perl -pe 's#sites/(.+?)\..+#\1#')"
-      ;;
-    tabs*)
-      option="CustomTab:$(echo $1 | perl -pe 's#tabs/(.+?)\..+#\1#')"
       ;;
     profiles*)
       option="Profile:$(echo $1 | perl -pe 's#profiles/(.+?)\..+#\1#')"
       ;;
-    audience*)
-      option="Audience:$(echo $1 | perl -pe 's#audience/(.+?)\..+#\1#')"
+    sites*)
+      option="CustomSite:$(echo $1 | perl -pe 's#sites/(.+?)\..+#\1#')"
       ;;
-    experiences*)
-      option="ExperienceBundle:$(echo $1 | perl -pe 's#experiences/(.+?)/.+#\1#')"
-      publish=true
+    staticresources*)
+      option="StaticResource:$(echo $1 | perl -pe 's#staticresources/(.+?)(/|\.).+#\1#')"
+      ;;
+    tabs*)
+      option="CustomTab:$(echo $1 | perl -pe 's#tabs/(.+?)\..+#\1#')"
       ;;
     translations*)
       option="Translations:$(echo $1 | perl -pe 's#translations/(.+?)\..+#\1#')"
+      ;;
+    triggers*)
+      option="ApexTrigger:$(echo $1 | perl -pe 's#triggers/(.+?)\..+#\1#')"
       ;;
     webStoreTemplates*)
       option="WebStoreTemplate:$(echo $1 | perl -pe 's#webStoreTemplates/(.+?)\..+#\1#')"
