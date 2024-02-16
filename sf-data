@@ -121,7 +121,6 @@ if [[ $object == "" ]]; then
     | sed /^ProfileSkill/d \
     | sed /^Promotion/d \
     | sed /^Prompt/d \
-    | sed /osf/d \
     | sed /^Problem/d \
     | sed /^ChangeRequest/d \
     | sed /^Chatter/d \
