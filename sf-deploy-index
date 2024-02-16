@@ -23,6 +23,12 @@ mapOption() {
         fields*)
           option="CustomField:${object}.$(echo $path | perl -pe 's#fields/(.+?)\..+#\1#')"
           ;;
+        listViews*)
+          option="ListView:${object}.$(echo $path | perl -pe 's#listViews/(.+?)\..+#\1#')"
+          ;;
+        recordTypes*)
+          option="RecordType:${object}.$(echo $path | perl -pe 's#recordTypes/(.+?)\..+#\1#')"
+          ;;
         *)
           option="CustomObject:${object}"
           ;;
@@ -40,11 +46,17 @@ mapOption() {
     pages*)
       option="ApexPage:$(echo $1 | perl -pe 's#pages/(.+?)\..+#\1#')"
       ;;
+    globalValueSets*)
+      option="GlobalValueSet:$(echo $1 | perl -pe 's#globalValueSets/(.+?)\..+#\1#')"
+      ;;
     networks*)
       option="Network:$(echo $1 | perl -pe 's#networks/(.+?)\..+#\1#')"
       ;;
     sites*)
       option="CustomSite:$(echo $1 | perl -pe 's#sites/(.+?)\..+#\1#')"
+      ;;
+    tabs*)
+      option="CustomTab:$(echo $1 | perl -pe 's#tabs/(.+?)\..+#\1#')"
       ;;
     profiles*)
       option="Profile:$(echo $1 | perl -pe 's#profiles/(.+?)\..+#\1#')"
