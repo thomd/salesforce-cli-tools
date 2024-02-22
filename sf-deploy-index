@@ -53,6 +53,9 @@ mapOption() {
     pages*)
       option="ApexPage:$(echo $1 | perl -pe 's#pages/(.+?)\..+#\1#')"
       ;;
+    permissionsets*)
+      option="PermissionSet:$(echo $1 | perl -pe 's#permissionsets/(.+?)\..+#\1#')"
+      ;;
     profiles*)
       option="Profile:$(echo $1 | perl -pe 's#profiles/(.+?)\..+#\1#')"
       ;;
@@ -90,7 +93,7 @@ if [[ ${#uniq_options[@]} == 0 ]]; then
   echo -e " $(tput setaf 1)git index is empty, nothing to deploy$(tput sgr0) ...\n"
   exit 1
 else
-  echo -e " $(tput setaf 2)found ${#options[@]} file$([[ ! ${#options[@]} -eq 1 ]] && echo "s") for ${#uniq_options[@]} metadata-entit$([[ ${#uniq_options[@]} -eq 1 ]] && echo "y" || echo "ies") to deploy$(tput sgr0) ...\n"
+  echo -e " found $(tput setaf 2)${#options[@]} file$([[ ! ${#options[@]} -eq 1 ]] && echo "s")$(tput sgr0) in git index for $(tput setaf 2)${#uniq_options[@]} metadata-entit$([[ ${#uniq_options[@]} -eq 1 ]] && echo "y" || echo "ies")$(tput sgr0) to deploy ...\n"
   opts=''
   for p in ${uniq_options[@]}; do
     if [[ $p = *"#"* ]]; then
