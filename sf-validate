@@ -76,7 +76,7 @@ showresult() {
 
 if [ $unittests == true ]; then
   yesno " Validate and run Unit Tests on $(tput setaf 1)${org}$(tput sgr0) ?"
-  echo -e "\n $(tput setaf 2)Validate and run Unti Tests$(tput sgr0) ..."
+  echo -e "\n $(tput setaf 2)Validate and run Unit Tests$(tput sgr0) ..."
   [[ $DEBUG == "1" ]] && echo -e "\n   $(tput setaf 0)sf project deploy validate -x manifest/package.xml -o ${org} -l RunSpecifiedTests [-t ...] $(tput sgr0)\n"
   sf project deploy validate -x manifest/package.xml -l RunSpecifiedTests `sed s/,$// scripts/test/unit-test-list.txt | awk '{ printf(" -t %s", $0) }'` -o ${org} > ${result}
 else
