@@ -1,0 +1,101 @@
+#!/usr/bin/env bash
+
+#
+# Helper for managing Debug Logs
+#
+# USAGE
+#
+#     sf-log                          #
+#     sf-log -o ORG                   # set ORG
+#     sf-log -u USER                  # set user [default: User which logged into Org]
+#     sf-log -l DEBUG_LEVEL           # set debug-level [default: SFDC_DevConsole]
+#
+# EXAMPLES
+#
+#     sf-log; less debug.log
+#
+# COMMANDS
+#
+#     sf apex list log
+#     sf apex tail log -c -s | spacer
+#     script -q /dev/null sf apex tail log -c -s | tee debug.log
+
+yesno() {
+  echo ""
+  read -p "$1 [Y/n] " response
+  [[ $response == "n" || $response == "N" ]] && exit 1
+}
+
+show_help() {
+  awk '/^[^ #]/{c=1}c==0{print $0}' $0 | sed -n '/^#/p' | sed 1d | sed 's/^#/ /g' \
+    | perl -pe "s/ #(.*)$/$(tput setaf 0)\1$(tput sgr 0)/" \
+    | perl -pe "s/(USAGE|EXAMPLES|COMMANDS)/$(tput setaf 0)\1$(tput sgr 0)/" \
+    | perl -pe "s/\`(.+)\`/$(tput sgr 0 1)\1$(tput sgr 0)/"
+  exit 1
+}
+
+setTargetOrg() {
+  if [[ -z "$org" ]]; then
+    org=$(cat .sf/config.json 2>/dev/null | jq -r '."target-org" | select( . != null )')
+  fi
+  if [[ -z "$org" ]]; then
+    org=$(cat ~/.sf/config.json 2>/dev/null | jq -r '."target-org" | select( . != null )')
+  fi
+  if [[ -z "$org" ]]; then
+    echo -e >&2 "\n $(tput setaf 1)Missing target org$(tput sgr 0)\n\n   Either provide with $(tput setaf 0)-o$(tput sgr 0) option, or set via $(tput setaf 0)sf config set target-org <org>$(tput sgr 0)"
+    exit 1
+  fi
+}
+
+org=""
+user=""
+level="SFDC_DevConsole"
+
+while [ $# -gt 0 ]; do
+  case $1 in
+    -o)
+      shift
+      org=$1
+      ;;
+    -u)
+      shift
+      user="$1"
+      ;;
+    -l)
+      shift
+      level="$1"
+      ;;
+    -h|--help)
+      show_help
+      ;;
+    *)
+      ;;
+  esac
+  shift
+done
+setTargetOrg
+
+now=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+exp=$(date -v+1H -u +"%Y-%m-%dT%H:%M:%SZ")
+
+if [[ $user == "" ]]; then
+  user=$(cat ~/.sfdx/alias.json | jq -r ".orgs.${org}")
+fi
+traceid=$(sf data query -q "SELECT Id FROM TraceFlag WHERE TracedEntityId IN (SELECT Id FROM User WHERE Username='${user}')" -t -o ${org} --json | jq -r '.result.records[0].Id')
+
+if [[ $traceid == "null" ]]; then
+  yesno " Create new DEBUG LOG for $(tput setaf 4)${user}$(tput sgr0) on $(tput setaf 1)${org}$(tput sgr0) ?"
+  levelid=$(sf data query -q "SELECT Id FROM DebugLevel WHERE DeveloperName='${level}'" -t -o ${org} --json | jq -r '.result.records[0].Id')
+  userid=$(sf data query -q "SELECT Id from User WHERE Username='${user}'" -o ${org} --json | jq -r '.result.records[0].Id')
+  # Possible LogType: USER_DEBUG, DEVELOPER_LOG, CLASS_TRACING
+  # see https://help.salesforce.com/s/articleView?id=sf.code_setting_debug_log_levels.htm&type=5
+  sf data create record -o ${org} -s TraceFlag -v "TracedEntityId=${userid} StartDate=${now} ExpirationDate=${exp} DebugLevelId=${levelid} LogType=USER_DEBUG" -t --json > /dev/null
+else
+  yesno " Start DEBUG LOG for $(tput setaf 4)${user}$(tput sgr0) on $(tput setaf 1)${org}$(tput sgr0) ?"
+  sf data update record -o ${org} -s TraceFlag -i ${traceid} -v "StartDate=${now} ExpirationDate=${exp}" -t --json > /dev/null
+fi
+
+script -q /dev/null sf apex tail log -c -s | tee debug.log
+
+trap "rm debug.log; exit 0;" SIGINT EXIT
+

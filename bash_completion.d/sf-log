@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+
+_sflog_completions() {
+    local cur prev alias
+    usercache="/tmp/sf-users"
+    levelcache="/tmp/sf-debuglevels"
+    COMPREPLY=()
+    cur="${COMP_WORDS[COMP_CWORD]}"
+    prev="${COMP_WORDS[COMP_CWORD-1]}"
+
+    if [ ! -s "${usercache}" ]; then
+      org=$(cat .sf/config.json 2>/dev/null | jq -r '."target-org" | select( . != null )')
+      if [[ -z "$org" ]]; then
+        org=$(cat ~/.sf/config.json 2>/dev/null | jq -r '."target-org" | select( . != null )')
+      fi
+      sf data query -q "SELECT username FROM User WHERE isActive=True" -o ${org} --json | jq -r '.result.records[].Username' > ${usercache}
+    fi
+    users=$(cat ${usercache})
+
+    if [ ! -s "${levelcache}" ]; then
+      org=$(cat .sf/config.json 2>/dev/null | jq -r '."target-org" | select( . != null )')
+      if [[ -z "$org" ]]; then
+        org=$(cat ~/.sf/config.json 2>/dev/null | jq -r '."target-org" | select( . != null )')
+      fi
+      sf data query -q "SELECT Id, DeveloperName, MasterLabel FROM DebugLevel" -t -o ${org} --json | jq -r '.result.records[].DeveloperName' > ${levelcache}
+    fi
+    level=$(cat ${levelcache})
+
+    alias=$(cat ~/.sfdx/alias.json | jq -r '.orgs | keys[]')
+
+    case "${prev}" in
+        -o)
+            COMPREPLY=($(compgen -W "${alias}" -- ${cur}))
+            return 0
+            ;;
+        -u)
+            COMPREPLY=($(compgen -W "${users}" -- ${cur}))
+            return 0
+            ;;
+        -l)
+            COMPREPLY=($(compgen -W "${level}" -- ${cur}))
+            return 0
+            ;;
+    esac
+}
+
+complete -F _sflog_completions sf-log
+
