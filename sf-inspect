@@ -1,13 +1,12 @@
 #!/usr/bin/env bash
 
 #
-# Inspect custom-labels and profiles to identify inconsistencies
+# Inspect local custom-labels and profiles to identify inconsistencies
 #
 # USAGE
 #
 #     sf-inspect --labels             # list custom-labels on local metadata, package-manifest, translation-files and usage
 #     sf-inspect --profiles           # compare profile settings
-#     sf-inspect -o ORG               # set ORG
 #     sf-inspect -d DIR               # save generated csv file in DIR folder [default: .data]
 #
 
@@ -25,20 +24,6 @@ show_help() {
   exit 1
 }
 
-setTargetOrg() {
-  if [[ -z "$org" ]]; then
-    org=$(cat .sf/config.json 2>/dev/null | jq -r '."target-org" | select( . != null )')
-  fi
-  if [[ -z "$org" ]]; then
-    org=$(cat ~/.sf/config.json 2>/dev/null | jq -r '."target-org" | select( . != null )')
-  fi
-  if [[ -z "$org" ]]; then
-    echo -e >&2 "\n $(tput setaf 1)Missing target org$(tput sgr 0)\n\n   Either provide with $(tput setaf 0)-o$(tput sgr 0) option, or set via $(tput setaf 0)sf config set target-org <org>$(tput sgr 0)"
-    exit 1
-  fi
-}
-
-org=""
 target=".data"
 labels=false
 profiles=false
@@ -48,10 +33,6 @@ profiles=false
 
 while [ $# -gt 0 ]; do
   case $1 in
-    -o)
-      shift
-      org=$1
-      ;;
     -d)
       shift
       target=$1
@@ -70,7 +51,6 @@ while [ $# -gt 0 ]; do
   esac
   shift
 done
-setTargetOrg
 mkdir -p "$target"
 
 if [[ $labels == true ]]; then
