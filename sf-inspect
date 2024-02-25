@@ -5,7 +5,7 @@
 #
 # USAGE
 #
-#     sf-inspect --labels             # list custom-labels on remote-org, local-metadata, package-manifest, translation-files and usage
+#     sf-inspect --labels             # list custom-labels on local metadata, package-manifest, translation-files and usage
 #     sf-inspect --profiles           # compare profile settings
 #     sf-inspect -o ORG               # set ORG
 #     sf-inspect -d DIR               # save generated csv file in DIR folder [default: .data]
@@ -44,6 +44,7 @@ labels=false
 profiles=false
 
 [[ -z "$1" ]] && show_help
+[ ! -f "./sfdx-project.json" ] && echo >&2 "not a SFDX project!" && exit 1
 
 while [ $# -gt 0 ]; do
   case $1 in
@@ -70,37 +71,61 @@ while [ $# -gt 0 ]; do
   shift
 done
 setTargetOrg
-
-[ ! -f "./sfdx-project.json" ] && echo >&2 "not a SFDX project!" && exit 1
+mkdir -p "$target"
 
 if [[ $labels == true ]]; then
   labelsfile="${target}/labels.csv"
-
-  echo "\"name\",\"value\"" > "${labelsfile}"
+  echo "\"Label\",\"en_US\"" > "$labelsfile"
   cat force-app/main/default/labels/CustomLabels.labels-meta.xml \
     | sed "s#&quot;#'#g" \
     | sed "s#\"#'#g" \
     | xml sel -N sf="http://soap.sforce.com/2006/04/metadata" \
-      -t -m "//sf:labels" \
-      --var linebreak -n --break \
-      -o "\"" -v "sf:fullName/text()" -o "\",\"" -v "translate(sf:value/text(), \$linebreak , ' ')" -o "\"" -n \
-    >> "${labelsfile}"
+        -t -m "//sf:labels" \
+        --var linebreak -n --break \
+        -o "\"" -v "sf:fullName/text()" -o "\",\"" -v "translate(sf:value/text(), \$linebreak , ' ')" -o "\"" -n \
+    >> "$labelsfile"
 
   while read -r path; do
     file="$(basename $path)"
     lang="${file%%.*}"
-    echo "$lang: $file"
-  done < <(fd -e xml . force-app/main/default/translations)
+    translationsfile="${target}/translation_${lang}.csv"
+    echo "\"Label\",\"${lang}\"" > "${translationsfile}"
+    cat "$path" \
+      | sed "s#&quot;#'#g" \
+      | sed "s#\"#'#g" \
+      | xml sel -N sf="http://soap.sforce.com/2006/04/metadata" \
+        -t -m "//sf:customLabels" \
+        --var linebreak -n --break \
+        -o "\"" -v "sf:name/text()" -o "\",\"" -v "translate(sf:label/text(), \$linebreak, ' ')" -o "\"" -n \
+      >> "$translationsfile"
+    csvtk join -l -f 1 "$labelsfile" "$translationsfile" --outer-join > temp; mv temp "$labelsfile"
+    rm "$translationsfile"
+  done < <(fd -e xml . force-app/main/default/translations -E '*en_US*')
+
+  manifestfile="${target}/manifest.csv"
+  echo "\"Label\",\"Manifest\"" > "$manifestfile"
+  cat manifest/package.xml \
+    | xml sel -N sf="http://soap.sforce.com/2006/04/metadata" \
+        -t -m "//sf:types[sf:name='CustomLabel']" \
+        -v "sf:members/text()" -n \
+    | sed "s/$/,X/g" \
+    >> "$manifestfile"
+  csvtk join -l -f 1 "$labelsfile" "$manifestfile" --outer-join > temp; mv temp "$labelsfile"
+  rm "$manifestfile"
+
+  usagefile="${target}/usage.csv"
+  echo "\"Label\",\"Usage\"" > "$usagefile"
+  while read label; do
+    echo "${label},$(rg -g '!{force-app/main/default/translations/*,force-app/main/default/labels/*}' -l -w ${label} force-app | wc -l | tr -d ' ')" >> "$usagefile"
+  done < <(csvtk cut -f "Label" "$labelsfile" | sed 1d)
+  csvtk join -l -f 1 "$labelsfile" "$usagefile" --outer-join > temp; mv temp "$labelsfile"
+  rm "$usagefile"
+
+  vd "$labelsfile"
 fi
 
-    #icdiff \
-      #<(xml sel -N sf="http://soap.sforce.com/2006/04/metadata" -t -v "//sf:labels/sf:fullName" -n force-app/main/default/labels/CustomLabels.labels-meta.xml | sort | uniq) \
-      #<(xml sel -N sf="http://soap.sforce.com/2006/04/metadata" -t -v "//sf:customLabels/sf:name" -n force-app/main/default/translations/fr.translation-meta.xml | sort | uniq)
-
-    #icdiff \
-      #<(xml sel -N sf="http://soap.sforce.com/2006/04/metadata" -t -v "//sf:customLabels/sf:name" -n force-app/main/default/translations/de.translation-meta.xml | sort | uniq) \
-      #<(xml sel -N sf="http://soap.sforce.com/2006/04/metadata" -t -v "//sf:customLabels/sf:name" -n force-app/main/default/translations/fr.translation-meta.xml | sort | uniq)
-
-
+if [[ $profiles == true ]]; then
+  echo "TODO"
+fi
 
 exit 0
