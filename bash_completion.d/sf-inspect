@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+_sfinspect_completions() {
+    local cur prev alias
+    COMPREPLY=()
+    cur="${COMP_WORDS[COMP_CWORD]}"
+    prev="${COMP_WORDS[COMP_CWORD-1]}"
+
+    COMPREPLY=($(compgen -W "--labels --profiles" -- ${cur}))
+}
+
+complete -F _sfinspect_completions sf-inspect
+

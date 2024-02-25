@@ -1,0 +1,106 @@
+#!/usr/bin/env bash
+
+#
+# Inspect custom-labels and profiles to identify inconsistencies
+#
+# USAGE
+#
+#     sf-inspect --labels             # list custom-labels on remote-org, local-metadata, package-manifest, translation-files and usage
+#     sf-inspect --profiles           # compare profile settings
+#     sf-inspect -o ORG               # set ORG
+#     sf-inspect -d DIR               # save generated csv file in DIR folder [default: .data]
+#
+
+yesno() {
+  echo ""
+  read -p "$1 [Y/n] " response
+  [[ $response == "n" || $response == "N" ]] && exit 1
+}
+
+show_help() {
+  awk '/^[^ #]/{c=1}c==0{print $0}' $0 | sed -n '/^#/p' | sed 1d | sed 's/^#/ /g' \
+    | perl -pe "s/ #(.*)$/$(tput setaf 0)\1$(tput sgr 0)/" \
+    | perl -pe "s/(USAGE|EXAMPLES|COMMANDS)/$(tput setaf 0)\1$(tput sgr 0)/" \
+    | perl -pe "s/\`(.+)\`/$(tput sgr 0 1)\1$(tput sgr 0)/"
+  exit 1
+}
+
+setTargetOrg() {
+  if [[ -z "$org" ]]; then
+    org=$(cat .sf/config.json 2>/dev/null | jq -r '."target-org" | select( . != null )')
+  fi
+  if [[ -z "$org" ]]; then
+    org=$(cat ~/.sf/config.json 2>/dev/null | jq -r '."target-org" | select( . != null )')
+  fi
+  if [[ -z "$org" ]]; then
+    echo -e >&2 "\n $(tput setaf 1)Missing target org$(tput sgr 0)\n\n   Either provide with $(tput setaf 0)-o$(tput sgr 0) option, or set via $(tput setaf 0)sf config set target-org <org>$(tput sgr 0)"
+    exit 1
+  fi
+}
+
+org=""
+target=".data"
+labels=false
+profiles=false
+
+[[ -z "$1" ]] && show_help
+
+while [ $# -gt 0 ]; do
+  case $1 in
+    -o)
+      shift
+      org=$1
+      ;;
+    -d)
+      shift
+      target=$1
+      ;;
+    -l|--labels)
+      labels=true
+      ;;
+    -p|--profiles)
+      profiles=true
+      ;;
+    -h|--help)
+      show_help
+      ;;
+    *)
+      ;;
+  esac
+  shift
+done
+setTargetOrg
+
+[ ! -f "./sfdx-project.json" ] && echo >&2 "not a SFDX project!" && exit 1
+
+if [[ $labels == true ]]; then
+  labelsfile="${target}/labels.csv"
+
+  echo "\"name\",\"value\"" > "${labelsfile}"
+  cat force-app/main/default/labels/CustomLabels.labels-meta.xml \
+    | sed "s#&quot;#'#g" \
+    | sed "s#\"#'#g" \
+    | xml sel -N sf="http://soap.sforce.com/2006/04/metadata" \
+      -t -m "//sf:labels" \
+      --var linebreak -n --break \
+      -o "\"" -v "sf:fullName/text()" -o "\",\"" -v "translate(sf:value/text(), \$linebreak , ' ')" -o "\"" -n \
+    >> "${labelsfile}"
+
+  while read -r path; do
+    file="$(basename $path)"
+    lang="${file%%.*}"
+    echo "$lang: $file"
+  done < <(fd -e xml . force-app/main/default/translations)
+fi
+
+    #icdiff \
+      #<(xml sel -N sf="http://soap.sforce.com/2006/04/metadata" -t -v "//sf:labels/sf:fullName" -n force-app/main/default/labels/CustomLabels.labels-meta.xml | sort | uniq) \
+      #<(xml sel -N sf="http://soap.sforce.com/2006/04/metadata" -t -v "//sf:customLabels/sf:name" -n force-app/main/default/translations/fr.translation-meta.xml | sort | uniq)
+
+    #icdiff \
+      #<(xml sel -N sf="http://soap.sforce.com/2006/04/metadata" -t -v "//sf:customLabels/sf:name" -n force-app/main/default/translations/de.translation-meta.xml | sort | uniq) \
+      #<(xml sel -N sf="http://soap.sforce.com/2006/04/metadata" -t -v "//sf:customLabels/sf:name" -n force-app/main/default/translations/fr.translation-meta.xml | sort | uniq)
+
+
+
+exit 0
