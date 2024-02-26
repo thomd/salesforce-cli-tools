@@ -42,6 +42,31 @@ write_permissions() {
         -o "classAccesses:" -v "sf:apexClass/text()" -o ",enabled: " -v "sf:enabled/text()" \
         -n "$path" >> "$2"
       ;;
+    customMetadataTypeAccesses*)
+      xml sel -N sf="$sfns" -t -m "//sf:customMetadataTypeAccesses" \
+        -o "customMetadataTypeAccesses:" -v "sf:name/text()" -o ",enabled: " -v "sf:enabled/text()" \
+        -n "$path" >> "$2"
+      ;;
+    customPermissions*)
+      xml sel -N sf="$sfns" -t -m "//sf:customPermissions" \
+        -o "customPermissions:" -v "sf:name/text()" -o ",enabled: " -v "sf:enabled/text()" \
+        -n "$path" >> "$2"
+      ;;
+    customSettingAccesses*)
+      xml sel -N sf="$sfns" -t -m "//sf:customSettingAccesses" \
+        -o "customSettingAccesses:" -v "sf:name/text()" -o ",enabled: " -v "sf:enabled/text()" \
+        -n "$path" >> "$2"
+      ;;
+    externalCredentialPrincipalAccesses*)
+      xml sel -N sf="$sfns" -t -m "//sf:externalCredentialPrincipalAccesses" \
+        -o "externalCredentialPrincipalAccesses:" -v "sf:externalCredentialPrincipal/text()" -o ",enabled: " -v "sf:enabled/text()" \
+        -n "$path" >> "$2"
+      ;;
+    flowAccesses*)
+      xml sel -N sf="$sfns" -t -m "//sf:flowAccesses" \
+        -o "flowAccesses:" -v "sf:flow/text()" -o ",enabled: " -v "sf:enabled/text()" \
+        -n "$path" >> "$2"
+      ;;
     fieldPermissions*)
       xml sel -N sf="$sfns" -t -m "//sf:fieldPermissions" \
         -o "fieldPermissions:" -v "sf:field/text()" -o ",editable: " -v "sf:editable/text()" -o " | readable: " -v "sf:readable/text()" \
