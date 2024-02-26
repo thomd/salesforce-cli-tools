@@ -5,10 +5,11 @@
 #
 # USAGE
 #
-#     sf-log                          #
+#     sf-log                          # list active User Logs
 #     sf-log -o ORG                   # set ORG
-#     sf-log -u USER                  # set user [default: User which logged into Org]
+#     sf-log -u USER                  # set user [default: User which is logged into Org]
 #     sf-log -l DEBUG_LEVEL           # set debug-level [default: SFDC_DevConsole]
+#     sf-log --delete                 # delete debug logs
 #
 # EXAMPLES
 #
@@ -47,9 +48,17 @@ setTargetOrg() {
   fi
 }
 
+delete_debug_log() {
+  yesno " Delete DEBUG LOG for on $(tput setaf 1)${org}$(tput sgr0) ?"
+  list_of_ids=$(mktemp)
+  echo -e "Id\n$(sf apex list log -o "$org" --json | jq -r '.result[].Id')" > "$list_of_ids"
+  sf data delete bulk -o "$org" -f "$list_of_ids" -s ApexLog
+}
+
 org=""
 user=""
 level="SFDC_DevConsole"
+delete=false
 
 while [ $# -gt 0 ]; do
   case $1 in
@@ -65,6 +74,9 @@ while [ $# -gt 0 ]; do
       shift
       level="$1"
       ;;
+    --delete)
+      delete=true
+      ;;
     -h|--help)
       show_help
       ;;
@@ -75,12 +87,30 @@ while [ $# -gt 0 ]; do
 done
 setTargetOrg
 
+if [[ $delete == true ]]; then
+  delete_debug_log
+  exit 0
+fi
+
 now=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 exp=$(date -v+1H -u +"%Y-%m-%dT%H:%M:%SZ")
 
 if [[ $user == "" ]]; then
-  user=$(cat ~/.sfdx/alias.json | jq -r ".orgs.${org}")
+  echo ""
+  #user=$(cat ~/.sfdx/alias.json | jq -r ".orgs.${org}")
+  while read -a arr; do
+    from=$(date -v +1H -j -f %Y-%m-%dT%H:%M:%S.000+0000 "${arr[0]}" +%s)
+    to=$(date -v +1H -j -f %Y-%m-%dT%H:%M:%S.000+0000 "${arr[1]}" +%s)
+    now=$(date +%s)
+    [ "$to" -ge "$now" ] && col=2 || col=1
+    range="$(tput setaf ${col})$(date -j -f %s "$from" +%H:%M) → $(date -j -f %s "$to" +%H:%M)$(tput sgr0)"
+    usrname=$(sf data query -q "SELECT Name FROM User WHERE Id='${arr[2]}'" --json | jq -r '.result.records[].Name')
+    dbglevel=$(sf data query -q "SELECT DeveloperName FROM DebugLevel WHERE Id='${arr[3]}'" -t --json | jq -r '.result.records[].DeveloperName')
+    echo " $range: $usrname $(tput setaf 0)[${dbglevel}]$(tput sgr0)"
+  done < <(sf data query -q "SELECT StartDate, ExpirationDate, TracedEntityId, DebugLevelId FROM TraceFlag WHERE LogType='USER_DEBUG'" -t --json | jq -r '.result.records[] | "\(.StartDate) \(.ExpirationDate) \(.TracedEntityId) \(.DebugLevelId)"')
+  exit 0
 fi
+
 traceid=$(sf data query -q "SELECT Id FROM TraceFlag WHERE TracedEntityId IN (SELECT Id FROM User WHERE Username='${user}')" -t -o ${org} --json | jq -r '.result.records[0].Id')
 
 if [[ $traceid == "null" ]]; then
