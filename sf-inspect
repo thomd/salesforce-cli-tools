@@ -13,8 +13,6 @@
 #
 #     sf-metadata -m CustomLabels
 #     sf-inspect labels
-#
-#     sf-inspect permissions
 
 yesno() {
   echo ""
