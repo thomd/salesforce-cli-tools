@@ -7,6 +7,7 @@
 #
 #     sf-inspect labels               # list custom-labels on local metadata, package-manifest, translation-files and usage
 #     sf-inspect profiles             # compare settings of locally managed profiles
+#     sf-inspect permissionsets       # compare settings of locally managed permission sets
 #     sf-inspect -d DIR               # save generated csv file in DIR folder [default: .data]
 #
 # EXAMPLES
@@ -34,6 +35,7 @@ show_help() {
 target=".data"
 labels=false
 profiles=false
+sfns="http://soap.sforce.com/2006/04/metadata"
 
 [[ -z "$1" ]] && show_help
 [ ! -f "./sfdx-project.json" ] && echo >&2 "not a SFDX project!" && exit 1
@@ -115,7 +117,79 @@ if [[ $labels == true ]]; then
 fi
 
 if [[ $profiles == true ]]; then
-  echo "TODO"
+  yesno " Inspect $(tput setaf 4)Profiles$(tput sgr0) from local $(tput setaf 1)SFDX project$(tput sgr0) ?"
+
+  profilesfile="${target}/profiles.csv"
+  while read -r path; do
+    file="$(basename "$path")"
+    name="${file%%.*}"
+    profilefile="${target}/profile_${lang}.csv"
+    echo "\"section\",\"value\",\"${name}\"" > "${target}/profiles.csv"
+    while read -r section; do
+      case "$section" in
+        applicationVisibilities*)
+          xml sel -N sf="$sfns" -t -m "//sf:applicationVisibilities" \
+            -o "applicationVisibilities," -v "sf:application/text()" -o ",default: " -v "sf:default/text()" -o " | visible: " -v "sf:visible/text()" \
+            -n "$path" >> "${target}/profiles.csv"
+          ;;
+        classAccesses*)
+          xml sel -N sf="$sfns" -t -m "//sf:classAccesses" \
+            -o "classAccesses," -v "sf:apexClass/text()" -o ",enabled: " -v "sf:enabled/text()" \
+            -n "$path" >> "${target}/profiles.csv"
+          ;;
+        fieldPermissions*)
+          xml sel -N sf="$sfns" -t -m "//sf:fieldPermissions" \
+            -o "fieldPermissions," -v "sf:field/text()" -o ",editable: " -v "sf:editable/text()" -o " | readable: " -v "sf:readable/text()" \
+            -n "$path" >> "${target}/profiles.csv"
+          ;;
+        layoutAssignments*)
+          xml sel -N sf="$sfns" -t -m "//sf:layoutAssignments" \
+            -o "layoutAssignments," -v "sf:layout/text()" -o ",X" \
+            -n "$path" >> "${target}/profiles.csv"
+          ;;
+        objectPermissions*)
+          xml sel -N sf="$sfns" -t -m "//sf:objectPermissions" \
+            -o "objectPermissions," -v "sf:object/text()" -o ",create: " -v "sf:allowCreate/text()" \
+            -o " | delete: " -v "sf:allowDelete/text()" \
+            -o " | edit: " -v "sf:allowEdit/text()" \
+            -o " | read: " -v "sf:allowRead/text()" \
+            -o " | modifyAll: " -v "sf:modifyAllRecords/text()" \
+            -o " | viewAll: " -v "sf:viewAllRecords/text()" \
+            -n "$path" >> "${target}/profiles.csv"
+          ;;
+        pageAccesses*)
+          xml sel -N sf="$sfns" -t -m "//sf:pageAccesses" \
+            -o "pageAccesses," -v "sf:apexPage/text()" -o ",enabled: " -v "sf:enabled/text()" \
+            -n "$path" >> "${target}/profiles.csv"
+          ;;
+        recordTypeVisibilities*)
+          xml sel -N sf="$sfns" -t -m "//sf:recordTypeVisibilities" \
+            -o "recordTypeVisibilities," -v "sf:recordType/text()" -o ",default: " -v "sf:default/text()" -o " | visible: " -v "sf:visible/text()" \
+            -n "$path" >> "${target}/profiles.csv"
+          ;;
+        tabVisibilities*)
+          xml sel -N sf="$sfns" -t -m "//sf:tabVisibilities" \
+            -o "tabVisibilities," -v "sf:tab/text()" -o ",visibility: " -v "sf:visibility/text()" \
+            -n "$path" >> "${target}/profiles.csv"
+          ;;
+        custom*)
+          xml sel -N sf="$sfns" -t -m "//sf:custom" -o "custom," -o "," -v "text()" \
+            -n "$path" >> "${target}/profiles.csv"
+          ;;
+        userLicense*)
+          xml sel -N sf="$sfns" -t -m "//sf:userLicense" -o "userLicense," -o "," -v "text()" \
+            -n "$path" >> "${target}/profiles.csv"
+          ;;
+        userPermissions*)
+          xml sel -N sf="$sfns" -t -m "//sf:userPermissions" \
+            -o "userPermissions," -v "sf:name/text()" -o ",enabled: " -v "sf:enabled/text()" \
+            -n "$path" >> "${target}/profiles.csv"
+          ;;
+      esac
+    done < <(xml sel -N sf="$sfns" -t -m "//sf:Profile/child::node()" -v "name()" -n "$path" | sort | uniq | sed /^$/d)
+  done < <(fd -e xml Admin force-app/main/default/profiles)
+
+  exit 0
 fi
 
 exit 0
