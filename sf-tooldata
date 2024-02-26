@@ -6,7 +6,7 @@
 # USAGE
 #
 #     sf-tooldata -o ALIAS                  # query from ALIAS org
-#     sf-tooldata -d DIR                    # save data in DIR folder [default: .tooldata]
+#     sf-tooldata -d DIR                    # save data in DIR folder [default: .data]
 #     sf-tooldata                           # query all data from default org and save in default folder
 #
 #     sf-tooldata -s OBJ_1 -s OBJ_2         # query objects OBJ_1 and OBJ_2 and save in DIR
@@ -33,7 +33,7 @@ setTargetOrg() {
 }
 
 org=""
-target=".tooldata"
+target=".data"
 object="all"
 visidata=false
 listfile=$(mktemp)
