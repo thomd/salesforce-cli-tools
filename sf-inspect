@@ -1,14 +1,21 @@
 #!/usr/bin/env bash
 
 #
-# Inspect local custom-labels and profiles to identify inconsistencies
+# Inspect local custom-labels and profiles to identify differences
 #
 # USAGE
 #
-#     sf-inspect --labels             # list custom-labels on local metadata, package-manifest, translation-files and usage
-#     sf-inspect --profiles           # compare profile settings
+#     sf-inspect labels               # list custom-labels on local metadata, package-manifest, translation-files and usage
+#     sf-inspect profiles             # compare settings of locally managed profiles
 #     sf-inspect -d DIR               # save generated csv file in DIR folder [default: .data]
 #
+# EXAMPLES
+#
+#     sf-metadata -m CustomLabels
+#     sf-inspect labels
+#
+#     sf-metadata -m Profiles
+#     sf-inspect profiles
 
 yesno() {
   echo ""
@@ -37,10 +44,10 @@ while [ $# -gt 0 ]; do
       shift
       target=$1
       ;;
-    -l|--labels)
+    labels)
       labels=true
       ;;
-    -p|--profiles)
+    profiles)
       profiles=true
       ;;
     -h|--help)
@@ -54,6 +61,8 @@ done
 mkdir -p "$target"
 
 if [[ $labels == true ]]; then
+  yesno " Inspect $(tput setaf 4)Custom Labels$(tput sgr0) and $(tput setaf 4)Translations$(tput sgr0) from local $(tput setaf 1)SFDX project$(tput sgr0) ?"
+
   labelsfile="${target}/labels.csv"
   echo "\"Label\",\"en_US\"" > "$labelsfile"
   cat force-app/main/default/labels/CustomLabels.labels-meta.xml \
@@ -102,6 +111,7 @@ if [[ $labels == true ]]; then
   rm "$usagefile"
 
   vd "$labelsfile"
+  exit 0
 fi
 
 if [[ $profiles == true ]]; then
