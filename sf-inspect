@@ -149,7 +149,7 @@ done
 mkdir -p "$target"
 
 if [[ $labels == true ]]; then
-  yesno " Inspect $(tput setaf 4)Custom Labels$(tput sgr0) and $(tput setaf 4)Translations$(tput sgr0) from local $(tput setaf 1)SFDX project$(tput sgr0) ?"
+  yesno " Inspect $(tput setaf 4)Custom Labels$(tput sgr0) and $(tput setaf 4)Translations$(tput sgr0) of local $(tput setaf 1)SFDX project$(tput sgr0) ?"
 
   labelsfile="${target}/labels.csv"
   echo "\"Label\",\"en_US\"" > "$labelsfile"
@@ -202,7 +202,7 @@ if [[ $labels == true ]]; then
 fi
 
 if [[ $permissions == true ]]; then
-  yesno " Inspect $(tput setaf 4)Profiles$(tput sgr0) and $(tput setaf 4)Permission Sets$(tput sgr0) from local $(tput setaf 1)SFDX project$(tput sgr0) ?"
+  yesno " Inspect $(tput setaf 4)Profiles$(tput sgr0) and $(tput setaf 4)Permission Sets$(tput sgr0) of local $(tput setaf 1)SFDX project$(tput sgr0) ?"
 
   permissionsfile="${target}/permissions.csv"
 
