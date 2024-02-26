@@ -1,25 +1,22 @@
 #!/usr/bin/env bash
 
 #
-# Helper for managing Debug Logs
+# create or update a debug-log user and print debug-log
 #
 # USAGE
 #
-#     sf-log                          # list active User Logs
+#     sf-log                          # update debug-log for autheticated org user
 #     sf-log -o ORG                   # set ORG
-#     sf-log -u USER                  # set user [default: User which is logged into Org]
+#     sf-log -u USER                  # set user [default: autheticated org user]
 #     sf-log -l DEBUG_LEVEL           # set debug-level [default: SFDC_DevConsole]
-#     sf-log --delete                 # delete debug logs
+#     sf-log -t MINUTES               # set debug-level for MINUTES min [default: 30]
+#     sf-log --list                   # list debug-log users
+#     sf-log --delete                 # delete debug-logs and debug-log users
 #
 # EXAMPLES
 #
-#     sf-log; less debug.log
-#
-# COMMANDS
-#
-#     sf apex list log
-#     sf apex tail log -c -s | spacer
-#     script -q /dev/null sf apex tail log -c -s | tee debug.log
+#     sf-log
+#     less debug.log
 
 yesno() {
   echo ""
@@ -48,17 +45,12 @@ setTargetOrg() {
   fi
 }
 
-delete_debug_log() {
-  yesno " Delete DEBUG LOG for on $(tput setaf 1)${org}$(tput sgr0) ?"
-  list_of_ids=$(mktemp)
-  echo -e "Id\n$(sf apex list log -o "$org" --json | jq -r '.result[].Id')" > "$list_of_ids"
-  sf data delete bulk -o "$org" -f "$list_of_ids" -s ApexLog
-}
-
 org=""
 user=""
 level="SFDC_DevConsole"
 delete=false
+list=false
+time="30"
 
 while [ $# -gt 0 ]; do
   case $1 in
@@ -74,6 +66,13 @@ while [ $# -gt 0 ]; do
       shift
       level="$1"
       ;;
+    -t)
+      shift
+      time="$1"
+      ;;
+    --list)
+      list=true
+      ;;
     --delete)
       delete=true
       ;;
@@ -87,17 +86,9 @@ while [ $# -gt 0 ]; do
 done
 setTargetOrg
 
-if [[ $delete == true ]]; then
-  delete_debug_log
-  exit 0
-fi
-
-now=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-exp=$(date -v+1H -u +"%Y-%m-%dT%H:%M:%SZ")
-
-if [[ $user == "" ]]; then
-  echo ""
-  #user=$(cat ~/.sfdx/alias.json | jq -r ".orgs.${org}")
+if [[ $list == true ]]; then
+  yesno " List debug-log users on $(tput setaf 1)${org}$(tput sgr0) ?"
+  echo
   while read -a arr; do
     from=$(date -v +1H -j -f %Y-%m-%dT%H:%M:%S.000+0000 "${arr[0]}" +%s)
     to=$(date -v +1H -j -f %Y-%m-%dT%H:%M:%S.000+0000 "${arr[1]}" +%s)
@@ -111,18 +102,35 @@ if [[ $user == "" ]]; then
   exit 0
 fi
 
+if [[ $delete == true ]]; then
+  yesno " Delete debug-logs and debug-log users on $(tput setaf 1)${org}$(tput sgr0) ?"
+  echo
+  list_of_ids=$(mktemp)
+  echo -e "Id\n$(sf apex list log -o "$org" --json | jq -r '.result[].Id')" > "$list_of_ids"
+  sf data delete bulk -o "$org" -f "$list_of_ids" -s ApexLog
+  while read id; do
+    sf data delete record -o "$org" -t -i "$id" -s TraceFlag > /dev/null
+  done < <(sf data query -q "SELECT Id FROM TraceFlag WHERE LogType='USER_DEBUG'" -t --json | jq -r '.result.records[].Id')
+  exit 0
+fi
+
+if [[ $user == "" ]]; then
+  user=$(cat ~/.sfdx/alias.json | jq -r ".orgs.${org}")
+fi
+
 traceid=$(sf data query -q "SELECT Id FROM TraceFlag WHERE TracedEntityId IN (SELECT Id FROM User WHERE Username='${user}')" -t -o ${org} --json | jq -r '.result.records[0].Id')
+startdate=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+expirationdate=$(date -v "+${time}M" -u +"%Y-%m-%dT%H:%M:%SZ")
 
 if [[ $traceid == "null" ]]; then
-  yesno " Create new DEBUG LOG for $(tput setaf 4)${user}$(tput sgr0) on $(tput setaf 1)${org}$(tput sgr0) ?"
+  yesno " Create new debug log for $(tput setaf 2)${user}$(tput sgr0) with log-level $(tput setaf 2)${level}$(tput sgr0) for $(tput setaf 2)${time} min$(tput sgr0) on $(tput setaf 1)${org}$(tput sgr0) ?"
   levelid=$(sf data query -q "SELECT Id FROM DebugLevel WHERE DeveloperName='${level}'" -t -o ${org} --json | jq -r '.result.records[0].Id')
   userid=$(sf data query -q "SELECT Id from User WHERE Username='${user}'" -o ${org} --json | jq -r '.result.records[0].Id')
-  # Possible LogType: USER_DEBUG, DEVELOPER_LOG, CLASS_TRACING
-  # see https://help.salesforce.com/s/articleView?id=sf.code_setting_debug_log_levels.htm&type=5
-  sf data create record -o ${org} -s TraceFlag -v "TracedEntityId=${userid} StartDate=${now} ExpirationDate=${exp} DebugLevelId=${levelid} LogType=USER_DEBUG" -t --json > /dev/null
+  sf data create record -o ${org} -s TraceFlag -v "TracedEntityId=${userid} StartDate=${startdate} ExpirationDate=${expirationdate} DebugLevelId=${levelid} LogType=USER_DEBUG" -t --json > /dev/null
 else
-  yesno " Start DEBUG LOG for $(tput setaf 4)${user}$(tput sgr0) on $(tput setaf 1)${org}$(tput sgr0) ?"
-  sf data update record -o ${org} -s TraceFlag -i ${traceid} -v "StartDate=${now} ExpirationDate=${exp}" -t --json > /dev/null
+  yesno " Update debug log for $(tput setaf 2)${user}$(tput sgr0) with log-level $(tput setaf 2)${level}$(tput sgr0) for $(tput setaf 2)${time} min$(tput sgr0) on $(tput setaf 1)${org}$(tput sgr0) ?"
+  levelid=$(sf data query -q "SELECT Id FROM DebugLevel WHERE DeveloperName='${level}'" -t -o ${org} --json | jq -r '.result.records[0].Id')
+  sf data update record -o ${org} -s TraceFlag -i ${traceid} -v "StartDate=${startdate} ExpirationDate=${expirationdate} DebugLevelId=${levelid}" -t --json > /dev/null
 fi
 
 script -q /dev/null sf apex tail log -c -s | tee debug.log
