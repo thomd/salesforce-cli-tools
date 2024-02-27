@@ -95,10 +95,10 @@ if [[ $list == true ]]; then
     now=$(date +%s)
     [ "$to" -ge "$now" ] && col=2 || col=1
     range="$(tput setaf ${col})$(date -j -f %s "$from" +%H:%M) → $(date -j -f %s "$to" +%H:%M)$(tput sgr0)"
-    usrname=$(sf data query -q "SELECT Name FROM User WHERE Id='${arr[2]}'" --json | jq -r '.result.records[].Name')
-    dbglevel=$(sf data query -q "SELECT DeveloperName FROM DebugLevel WHERE Id='${arr[3]}'" -t --json | jq -r '.result.records[].DeveloperName')
+    usrname=$(sf data query -q "SELECT Name FROM User WHERE Id='${arr[2]}'" -o ${org} --json | jq -r '.result.records[].Name')
+    dbglevel=$(sf data query -q "SELECT DeveloperName FROM DebugLevel WHERE Id='${arr[3]}'" -t -o ${org} --json | jq -r '.result.records[].DeveloperName')
     echo " $range: $usrname $(tput setaf 0)[${dbglevel}]$(tput sgr0)"
-  done < <(sf data query -q "SELECT StartDate, ExpirationDate, TracedEntityId, DebugLevelId FROM TraceFlag WHERE LogType='USER_DEBUG'" -t --json | jq -r '.result.records[] | "\(.StartDate) \(.ExpirationDate) \(.TracedEntityId) \(.DebugLevelId)"')
+  done < <(sf data query -q "SELECT StartDate, ExpirationDate, TracedEntityId, DebugLevelId FROM TraceFlag WHERE LogType='USER_DEBUG'" -t -o ${org} --json | jq -r '.result.records[] | "\(.StartDate) \(.ExpirationDate) \(.TracedEntityId) \(.DebugLevelId)"')
   exit 0
 fi
 
@@ -110,7 +110,7 @@ if [[ $delete == true ]]; then
   sf data delete bulk -o "$org" -f "$list_of_ids" -s ApexLog
   while read id; do
     sf data delete record -o "$org" -t -i "$id" -s TraceFlag > /dev/null
-  done < <(sf data query -q "SELECT Id FROM TraceFlag WHERE LogType='USER_DEBUG'" -t --json | jq -r '.result.records[].Id')
+  done < <(sf data query -q "SELECT Id FROM TraceFlag WHERE LogType='USER_DEBUG'" -t -o ${org} --json | jq -r '.result.records[].Id')
   exit 0
 fi
 
@@ -133,7 +133,7 @@ else
   sf data update record -o ${org} -s TraceFlag -i ${traceid} -v "StartDate=${startdate} ExpirationDate=${expirationdate} DebugLevelId=${levelid}" -t --json > /dev/null
 fi
 
-script -q /dev/null sf apex tail log -c -s | tee debug.log
+script -q /dev/null sf apex tail log -c -s -o ${org} | tee debug.log
 
 trap "rm debug.log; exit 0;" SIGINT EXIT
 
