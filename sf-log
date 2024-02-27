@@ -94,7 +94,7 @@ if [[ $list == true ]]; then
     to=$(date -v +1H -j -f %Y-%m-%dT%H:%M:%S.000+0000 "${arr[1]}" +%s)
     now=$(date +%s)
     [ "$to" -ge "$now" ] && col=2 || col=1
-    range="$(tput setaf ${col})$(date -j -f %s "$from" +%H:%M) → $(date -j -f %s "$to" +%H:%M)$(tput sgr0)"
+    range="$(tput setaf ${col})$(date -j -f %s "$from" "+%d.%m.%Y, %H:%M") → $(date -j -f %s "$to" "+%d.%m.%Y, %H:%M")$(tput sgr0)"
     usrname=$(sf data query -q "SELECT Name FROM User WHERE Id='${arr[2]}'" -o ${org} --json | jq -r '.result.records[].Name')
     dbglevel=$(sf data query -q "SELECT DeveloperName FROM DebugLevel WHERE Id='${arr[3]}'" -t -o ${org} --json | jq -r '.result.records[].DeveloperName')
     echo " $range: $usrname $(tput setaf 0)[${dbglevel}]$(tput sgr0)"
