@@ -123,7 +123,8 @@ elif [[ $(git diff HEAD --name-only | wc -l | tr -d ' ') == 0 || $all == true ]]
 else
   yesno " Deploy $(tput setaf 2)git index$(tput sgr0) to $(tput setaf 1)${org}$(tput sgr0)?"
   echo
-  watchexec -q --project-origin . --watch force-app -- sf-deploy-index $org
+  session=$(mktemp)
+  watchexec -q --project-origin . --watch force-app -- sf-deploy-index $org $session
 fi
 
 
