@@ -150,6 +150,7 @@ mkdir -p "$target"
 
 if [[ $labels == true ]]; then
   yesno " Inspect $(tput setaf 4)custom-labels$(tput sgr0) and $(tput setaf 4)translations$(tput sgr0) of local $(tput setaf 1)SFDX project$(tput sgr0) ?"
+  [ ! -d "./force-app/main/default/labels" ] && echo -e >&2 "\n $(tput setaf 1)Project has no custom labels$(tput sgr0)" && exit 1
 
   labelsfile="${target}/labels.csv"
   echo "\"Label\",\"en_US\"" > "$labelsfile"
