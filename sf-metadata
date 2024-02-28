@@ -7,8 +7,9 @@
 #
 #    sf-metadata                               # retrieve all metadata
 #    sf-metadata -o ORG                        # retrieve all metadata from ORG
-#    sf-metadata -m NAME1 -m NAME2             # retrieve metadata for type NAME1 and NAME2
-#    sf-metadata -x                            # retrieve metadata declared in manifest/package.xml
+#    sf-metadata -m NAME1 -m NAME2             # retrieve metadata of type NAME1 and NAME2
+#    sf-metadata -x                            # retrieve only metadata declared in manifest/package.xml
+#    sf-metadata -p                            # create minimal empty SFDX-project before retrieval
 #
 # COMMANDS
 #
@@ -46,6 +47,7 @@ setTargetOrg() {
 org=""
 name=""
 names_list=$(mktemp)
+project=false
 
 while [ $# -gt 0 ]; do
   case $1 in
@@ -61,6 +63,9 @@ while [ $# -gt 0 ]; do
         name="${name},${1}"
       fi
       ;;
+    -p)
+      project=true
+      ;;
     -h)
       show_help
       ;;
@@ -70,6 +75,16 @@ while [ $# -gt 0 ]; do
   shift
 done
 setTargetOrg
+
+if [[ ! -f "./sfdx-project.json" ]] && [[ $project == true ]]; then
+  echo '{"packageDirectories": [{"path": "force-app"}]}' > sfdx-project.json
+  mkdir force-app
+fi
+
+if [[ ! -f "./sfdx-project.json" ]]; then
+  echo -e >&2 "\n $(tput setaf 1)not a SFDX project$(tput sgr0)"
+  exit 1
+fi
 
 if [[ $name == "" ]]; then
   name="all"
