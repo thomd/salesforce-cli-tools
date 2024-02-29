@@ -11,11 +11,16 @@
 #    sf-metadata -x                            # retrieve only metadata declared in manifest/package.xml
 #    sf-metadata -p                            # create minimal empty SFDX-project before retrieval
 #
+# EXAMPLES
+#
+#    sf-metadata -p -o org_1; sf-metadata -p -o org_2; diff -qr org_1 org_2
+#
 # COMMANDS
 #
 #    sf org list metadata-types -o ORG | jq -r '.metadataObjects[].xmlName'
 #    sf project retrieve start -o ORG -m NAME:MEMBER
 #
+#    echo '{"packageDirectories": [{"path": "force-app"}]}' > sfdx-project.json; mkdir force-app;
 #    while read name; do sf project retrieve start -m $name; done < <(sf org list metadata-types | jq -r '.metadataObjects[].xmlName')
 
 yesno() {
@@ -78,8 +83,9 @@ done
 setTargetOrg
 
 if [[ ! -f "./sfdx-project.json" ]] && [[ $project == true ]]; then
+  mkdir -p "${org}/force-app"
+  cd "$org"
   echo '{"packageDirectories": [{"path": "force-app"}]}' > sfdx-project.json
-  mkdir force-app
 fi
 
 if [[ ! -f "./sfdx-project.json" ]]; then
@@ -90,11 +96,11 @@ fi
 if [[ $name == "" ]]; then
   name="all"
   [[ $DEBUG == "1" ]] && echo -e "\n   $(tput setaf 0)sf org list metadata-types -o ${org} | jq -r '.metadataObjects[].xmlName'$(tput sgr0)"
-  yesno " Fetch $(tput setaf 4)${name}$(tput sgr0) metadata from $(tput setaf 1)${org}$(tput sgr0) ?"
+  yesno " Retrieve $(tput setaf 4)${name}$(tput sgr0) metadata from $(tput setaf 1)${org}$(tput sgr0) ?"
 else
   names=$(echo ${name} | perl -pe "s/,/, /g" | perl -pe "s/(\w+)/$(tput setaf 4)\1$(tput sgr0)/g")
   [[ $DEBUG == "1" ]] && echo -e "\n   $(tput setaf 0)sf project retrieve start -o ${org} -m ${name//,/ -m }$(tput sgr0)"
-  yesno " Fetch metadata ${names} from $(tput setaf 1)${org}$(tput sgr0) ?"
+  yesno " Retrieve metadata ${names} from $(tput setaf 1)${org}$(tput sgr0) ?"
 fi
 
 if [[ $name == "all" ]]; then
