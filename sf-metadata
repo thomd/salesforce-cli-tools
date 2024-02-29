@@ -16,6 +16,7 @@
 #    sf org list metadata-types -o ORG | jq -r '.metadataObjects[].xmlName'
 #    sf project retrieve start -o ORG -m NAME:MEMBER
 #
+#    while read name; do sf project retrieve start -m $name; done < <(sf org list metadata-types | jq -r '.metadataObjects[].xmlName')
 
 yesno() {
   echo ""
