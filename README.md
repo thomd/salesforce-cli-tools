@@ -40,6 +40,24 @@ or
 
     DEBUG=1 sf-deploy
 
+## Commands
+
+1. `sf-data` downloads all data of Salesforce objects as csv files from an org.
+
+1. `sf-deploy` builds, deploys and publishes a full project or deploys single entities from the git index in watch mode for ease of development.
+
+1. `sf-inspect` inspect local custom-labels and their translations as well as permissions fromprofiles and permission-sets in a tabular manner.
+
+1. `sf-log` creates or updates the debug log for a given debug-log user and streams log to console.
+
+1. `sf-metadata` downloads all or specific metadata from an org.
+
+1. `sf-rel` extracts and displays relations of a given object-id to other objects based on downloaded data via `sf-data`.
+
+1. `sf-tooldata` downloads all data as csv files from an org using the Tooling API.
+
+1. `sf-validate` validate a full project against an org and runs unit tests.
+
 ## Use Cases
 
 ### Compare Data between Orgs
