@@ -13,7 +13,7 @@
 #
 # EXAMPLES
 #
-#    sf-metadata -p -o org_1; sf-metadata -p -o org_2; diff -qr org_1 org_2
+#    sf-metadata -p -o org1; sf-metadata -p -o org2; diff -qr org1 org2
 #
 # COMMANDS
 #
