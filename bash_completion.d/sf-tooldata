@@ -19,6 +19,7 @@ _sftooldata_completions() {
     names=$(cat ${cache})
     alias=$(cat ~/.sfdx/alias.json | jq -r '.orgs | keys[]')
 
+    COMPREPLY=($(compgen -W "-o -d -s -v" -- ${cur}))
     case "${prev}" in
         -s|-v)
             COMPREPLY=($(compgen -W "${names}" -- ${cur}))
