@@ -46,19 +46,19 @@ or
 
 1. `sf-deploy` builds, deploys and publishes a full project or deploys single entities from the git index in watch mode for ease of development.
 
-1. `sf-inspect` inspect local custom-labels and their translations as well as permissions fromprofiles and permission-sets in a tabular manner.
+1. `sf-inspect` inspect local custom-labels and their translations as well as permissions from profiles and permission-sets in a tabular manner.
 
 1. `sf-log` creates or updates the debug log for a given debug-log user and streams log to console.
 
 1. `sf-metadata` downloads all or specific metadata from an org.
 
-1. `sf-rel` extracts and displays relations of a given object-id to other objects based on downloaded data via `sf-data`.
+1. `sf-rel` extracts and displays relations of a given object-id to other objects.
 
 1. `sf-tooldata` downloads all data as csv files from an org using the Tooling API.
 
 1. `sf-validate` validate a full project against an org and runs unit tests.
 
-## Use Cases
+## Some Use Cases
 
 ### Compare Data between Orgs
 
@@ -66,7 +66,7 @@ or
     sf-data -o org2 -d .data2 -s Account
     daff --www .data1/Account.csv .data2/Account.csv
 
-### Inspect Data in VisiData
+### Download & Inspect Data in VisiData
 
 To automatically open retrieved data in VisiData without downloading into your local folder, use the `-v` option:
 
@@ -82,10 +82,9 @@ Supposed you are interested in the realations of an Account, e.g. `0019O00000Dc7
 
 ### Deploy Files from Git Index to Org
 
-Only deploying the files you are working on is way faster that always deploying the full project. 
+Only deploying the files you are working on is way faster that always deploying the full project.
 
-File changes are detected automatically and deployed on change for ease of development.
+File changes are detected automatically and deployed on change in watch-mode for ease of development.
 
     sf-deploy
 
-There are some pitfalls though, supposed you create a new class which will then be deployed automatically and then remove the class, then this class will not be deleted on the org.
