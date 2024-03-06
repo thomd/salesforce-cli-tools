@@ -21,8 +21,15 @@ mapOption() {
       option="ExperienceBundle:$(echo $1 | perl -pe 's#experiences/(.+?)/.+#\1#')"
       publish=true
       ;;
+    flexipages*)
+      option="FlexiPage:$(echo $1 | perl -pe 's#flexipages/(.+?)\..+#\1#')"
+      ;;
     globalValueSets*)
       option="GlobalValueSet:$(echo $1 | perl -pe 's#globalValueSets/(.+?)\..+#\1#')"
+      ;;
+    labels*)
+      #git diff --no-color force-app/main/default/labels/CustomLabels.labels-meta.xml | rg "^\+" | sed -n /\<fullName\>/p | perl -pe 's/.*<fullName>(.+)<\/fullName>.*/\1/g'
+      option="CustomLabels"
       ;;
     lwc*)
       option="LightningComponentBundle:$(echo $1 | perl -pe 's#lwc/(.+?)/.+#\1#')"
@@ -59,6 +66,9 @@ mapOption() {
       ;;
     profiles*)
       option="Profile:$(echo $1 | perl -pe 's#profiles/(.+?)\..+#\1#')"
+      ;;
+    quickActions*)
+      option="QuickAction:$(echo $1 | perl -pe 's#quickActions/(.+?)\..+#\1#')"
       ;;
     sites*)
       option="CustomSite:$(echo $1 | perl -pe 's#sites/(.+?)\..+#\1#')"
