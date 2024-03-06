@@ -2,28 +2,26 @@
 
 _sfmetadata_completions() {
     local cur prev names alias
-    cache="/tmp/sf-metadata.sobjects"
-    COMPREPLY=()
     cur="${COMP_WORDS[COMP_CWORD]}"
     prev="${COMP_WORDS[COMP_CWORD-1]}"
-
-    if [ ! -s "${cache}" ]; then
-      org=$(cat .sf/config.json 2>/dev/null | jq -r '."target-org" | select( . != null )')
-      if [[ -z "$org" ]]; then
-        org=$(cat ~/.sf/config.json 2>/dev/null | jq -r '."target-org" | select( . != null )')
-      fi
-      sf org list metadata-types -o ${org} | jq -r '.metadataObjects[].xmlName' | paste -sd' ' - > ${cache}
-    fi
-    names=$(cat ${cache})
-    alias=$(cat ~/.sfdx/alias.json | jq -r '.orgs | keys[]')
+    cache="/tmp/sf-metadata.sobjects"
 
     COMPREPLY=($(compgen -W "-o -m -x -p" -- ${cur}))
     case "${prev}" in
         -m)
+            if [ ! -s "${cache}" ]; then
+              org=$(cat .sf/config.json 2>/dev/null | jq -r '."target-org" | select( . != null )')
+              if [[ -z "$org" ]]; then
+                org=$(cat ~/.sf/config.json 2>/dev/null | jq -r '."target-org" | select( . != null )')
+              fi
+              sf org list metadata-types -o ${org} | jq -r '.metadataObjects[].xmlName' | paste -sd' ' - > ${cache}
+            fi
+            names=$(cat ${cache})
             COMPREPLY=($(compgen -W "${names}" -- ${cur}))
             return 0
             ;;
         -o)
+            alias=$(cat ~/.sfdx/alias.json | jq -r '.orgs | keys[]')
             COMPREPLY=($(compgen -W "${alias}" -- ${cur}))
             return 0
             ;;

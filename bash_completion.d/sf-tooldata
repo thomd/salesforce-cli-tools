@@ -2,30 +2,28 @@
 
 _sftooldata_completions() {
     local cur prev names alias
-    cache="/tmp/sf-tooldata.sobjects"
-    COMPREPLY=()
     cur="${COMP_WORDS[COMP_CWORD]}"
     prev="${COMP_WORDS[COMP_CWORD-1]}"
+    cache="/tmp/sf-tooldata.sobjects"
 
-    if [ ! -s "${cache}" ]; then
-      org=$(cat .sf/config.json 2>/dev/null | jq -r '."target-org" | select( . != null )')
-      if [[ -z "$org" ]]; then
-        org=$(cat ~/.sf/config.json 2>/dev/null | jq -r '."target-org" | select( . != null )')
-      fi
-      token=$(sf org display -o ${org} --json | jq -r '.result.accessToken')
-      url=$(sf org display -o ${org} --json | jq -r '.result.instanceUrl')
-      curl -s "${url}/services/data/v59.0/tooling/sobjects/" -H "Authorization: Bearer ${token}" | jq -r '.sobjects[].name' | paste -sd' ' - > ${cache}
-    fi
-    names=$(cat ${cache})
-    alias=$(cat ~/.sfdx/alias.json | jq -r '.orgs | keys[]')
-
-    COMPREPLY=($(compgen -W "-o -d -s -v" -- ${cur}))
+    COMPREPLY=($(compgen -W "-o -d -s -v -h" -- ${cur}))
     case "${prev}" in
         -s|-v)
+            if [ ! -s "${cache}" ]; then
+              org=$(cat .sf/config.json 2>/dev/null | jq -r '."target-org" | select( . != null )')
+              if [[ -z "$org" ]]; then
+                org=$(cat ~/.sf/config.json 2>/dev/null | jq -r '."target-org" | select( . != null )')
+              fi
+              token=$(sf org display -o ${org} --json | jq -r '.result.accessToken')
+              url=$(sf org display -o ${org} --json | jq -r '.result.instanceUrl')
+              curl -s "${url}/services/data/v59.0/tooling/sobjects/" -H "Authorization: Bearer ${token}" | jq -r '.sobjects[].name' | paste -sd' ' - > ${cache}
+            fi
+            names=$(cat ${cache})
             COMPREPLY=($(compgen -W "${names}" -- ${cur}))
             return 0
             ;;
         -o)
+            alias=$(cat ~/.sfdx/alias.json | jq -r '.orgs | keys[]')
             COMPREPLY=($(compgen -W "${alias}" -- ${cur}))
             return 0
             ;;

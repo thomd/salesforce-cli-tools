@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+_sfvalidate_completions() {
+    local cur prev
+    cur="${COMP_WORDS[COMP_CWORD]}"
+    prev="${COMP_WORDS[COMP_CWORD-1]}"
+    COMPREPLY=($(compgen -W "-o -n -h" -- ${cur}))
+}
+
+complete -F _sfvalidate_completions sf-validate
+

@@ -16,31 +16,28 @@ _sflog_completions() {
       fi
     done
 
-    usercache="/tmp/sf-users-${org}"
-    if [ ! -s "${usercache}" ]; then
-      sf data query -q "SELECT username FROM User WHERE isActive=True" -o ${org} --json | jq -r '.result.records[].Username' > ${usercache}
-    fi
-    users=$(cat ${usercache})
-
-    levelcache="/tmp/sf-debuglevels-${org}"
-    if [ ! -s "${levelcache}" ]; then
-      sf data query -q "SELECT Id, DeveloperName, MasterLabel FROM DebugLevel" -t -o ${org} --json | jq -r '.result.records[].DeveloperName' > ${levelcache}
-    fi
-    level=$(cat ${levelcache})
-
-    alias=$(cat ~/.sfdx/alias.json | jq -r '.orgs | keys[]')
-
-    COMPREPLY=($(compgen -W "-o -u -l -t --list --delete" -- ${cur}))
+    COMPREPLY=($(compgen -W "-o -u -l -t -h --list --delete" -- ${cur}))
     case "${prev}" in
         -o)
+            alias=$(cat ~/.sfdx/alias.json | jq -r '.orgs | keys[]')
             COMPREPLY=($(compgen -W "${alias}" -- ${cur}))
             return 0
             ;;
         -u)
+            usercache="/tmp/sf-users-${org}"
+            if [ ! -s "${usercache}" ]; then
+              sf data query -q "SELECT username FROM User WHERE isActive=True" -o ${org} --json | jq -r '.result.records[].Username' > ${usercache}
+            fi
+            users=$(cat ${usercache})
             COMPREPLY=($(compgen -W "${users}" -- ${cur}))
             return 0
             ;;
         -l)
+            levelcache="/tmp/sf-debuglevels-${org}"
+            if [ ! -s "${levelcache}" ]; then
+              sf data query -q "SELECT Id, DeveloperName, MasterLabel FROM DebugLevel" -t -o ${org} --json | jq -r '.result.records[].DeveloperName' > ${levelcache}
+            fi
+            level=$(cat ${levelcache})
             COMPREPLY=($(compgen -W "${level}" -- ${cur}))
             return 0
             ;;
