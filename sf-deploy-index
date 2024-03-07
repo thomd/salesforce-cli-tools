@@ -68,7 +68,7 @@ mapOption() {
       option="Profile:$(echo $1 | perl -pe 's#profiles/(.+?)\..+#\1#')"
       ;;
     quickActions*)
-      option="QuickAction:$(echo $1 | perl -pe 's#quickActions/(.+?)\..+#\1#')"
+      option="QuickAction:$(echo $1 | perl -pe 's#quickActions/(.+?\..+?)\..+#\1#')"
       ;;
     sites*)
       option="CustomSite:$(echo $1 | perl -pe 's#sites/(.+?)\..+#\1#')"
