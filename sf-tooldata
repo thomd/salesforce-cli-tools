@@ -5,12 +5,11 @@
 #
 # USAGE
 #
-#     sf-tooldata -o ALIAS                  # query from ALIAS org
-#     sf-tooldata -d DIR                    # save data in DIR folder [default: .data]
 #     sf-tooldata                           # query all data from default org and save in default folder
-#
-#     sf-tooldata -s OBJ_1 -s OBJ_2         # query objects OBJ_1 and OBJ_2 and save in DIR
-#     sf-tooldata -v OBJ                    # query Object OBJ and open in Visidata
+#     sf-tooldata -o ORG                    # query from ORG
+#     sf-tooldata -d DIR                    # save data in DIR folder [default: .data]
+#     sf-tooldata -s OBJECT1 -s OBJECT2     # query objects OBJECT1 and OBJECT2 and save in DIR
+#     sf-tooldata -v OBJECT                 # query Object OBJECT and open in Visidata
 #
 
 yesno() {
