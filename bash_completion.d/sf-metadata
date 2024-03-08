@@ -6,8 +6,13 @@ _sfmetadata_completions() {
     prev="${COMP_WORDS[COMP_CWORD-1]}"
     cache="/tmp/sf-metadata.sobjects"
 
-    COMPREPLY=($(compgen -W "-o -m -x -p" -- ${cur}))
+    COMPREPLY=($(compgen -W "-o -m -x -p -h" -- ${cur}))
     case "${prev}" in
+        -o)
+            alias=$(cat ~/.sfdx/alias.json | jq -r '.orgs | keys[]')
+            COMPREPLY=($(compgen -W "${alias}" -- ${cur}))
+            return 0
+            ;;
         -m)
             if [ ! -s "${cache}" ]; then
               org=$(cat .sf/config.json 2>/dev/null | jq -r '."target-org" | select( . != null )')
@@ -18,11 +23,6 @@ _sfmetadata_completions() {
             fi
             names=$(cat ${cache})
             COMPREPLY=($(compgen -W "${names}" -- ${cur}))
-            return 0
-            ;;
-        -o)
-            alias=$(cat ~/.sfdx/alias.json | jq -r '.orgs | keys[]')
-            COMPREPLY=($(compgen -W "${alias}" -- ${cur}))
             return 0
             ;;
     esac

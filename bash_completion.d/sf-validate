@@ -5,6 +5,13 @@ _sfvalidate_completions() {
     cur="${COMP_WORDS[COMP_CWORD]}"
     prev="${COMP_WORDS[COMP_CWORD-1]}"
     COMPREPLY=($(compgen -W "-o -n -h" -- ${cur}))
+    case "${prev}" in
+        -o)
+            alias=$(cat ~/.sfdx/alias.json | jq -r '.orgs | keys[]')
+            COMPREPLY=($(compgen -W "${alias}" -- ${cur}))
+            return 0
+            ;;
+    esac
 }
 
 complete -F _sfvalidate_completions sf-validate
