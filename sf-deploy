@@ -59,9 +59,9 @@ while [ $# -gt 0 ]; do
     -m)
       shift
       if [[ $names == "" ]]; then
-        names="${1}"
+        [[ $1 = *" "* ]] && names="\"$1\"" || names="$1"
       else
-        names="${names} -m ${1}"
+        [[ $1 = *" "* ]] && names="${names} -m \"$1\"" || names="${names} -m $1"
       fi
       ;;
     -x)
