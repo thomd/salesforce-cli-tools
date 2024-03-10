@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+_sfrel_completions() {
+    local cur prev alias
+    COMPREPLY=()
+    cur="${COMP_WORDS[COMP_CWORD]}"
+    prev="${COMP_WORDS[COMP_CWORD-1]}"
+
+    COMPREPLY=($(compgen -W "-h -s -r -R" -- ${cur}))
+}
+
+complete -F _sfrel_completions sf-rel
+
