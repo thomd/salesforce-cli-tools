@@ -27,10 +27,6 @@ mapOption() {
     globalValueSets*)
       option="GlobalValueSet:$(echo $1 | perl -pe 's#globalValueSets/(.+?)\..+#\1#')"
       ;;
-    labels*)
-      #git diff --no-color force-app/main/default/labels/CustomLabels.labels-meta.xml | rg "^\+" | sed -n /\<fullName\>/p | perl -pe 's/.*<fullName>(.+)<\/fullName>.*/\1/g'
-      option="CustomLabels"
-      ;;
     lwc*)
       option="LightningComponentBundle:$(echo $1 | perl -pe 's#lwc/(.+?)/.+#\1#')"
       ;;
@@ -96,7 +92,13 @@ declare -a options
 while read f; do
   path=$(echo $f | perl -pe 's#force-app/main/default/([^/]*)#\1#' | sed 's/ /#/g')
   options=(${options[@]} "$(mapOption "${path}")")
-done < <((cat $session; git diff HEAD --name-only) | sort | uniq | tee $session)
+done < <((cat $session; git diff HEAD --name-only | sed /labels-meta.xml$/d) | sort | uniq | tee $session)
+
+# all custom label entites are within one single file
+while read label; do
+  echo $label
+  options=(${options[@]} "CustomLabel:$label")
+done < <(git diff -U6 force-app/main/default/labels/CustomLabels.labels-meta.xml | gawk '/<labels>/{l=1}/<fullName>/{if(l==1)n=gensub(/.*<.+>(.+)<.+>.*/,"\\1","g",$0)}/^+/{if(l==1){c=1}}/<\/labels>/{if(l==1 && c==1)print n;l=0;c=0}')
 
 uniq_options=($(for option in "${options[@]}"; do echo "${option}"; done | sort -u))
 
