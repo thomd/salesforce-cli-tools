@@ -124,7 +124,7 @@ else
   yesno " Deploy $(tput setaf 2)git index$(tput sgr0) to $(tput setaf 1)${org}$(tput sgr0)?"
   echo
   session=$(mktemp)
-  watchexec -q --project-origin . --watch force-app -- sf-deploy-index $org $session
+  watchexec -q --project-origin . --watch force-app -- sf-deploy-index $org "$session"
 fi
 
 

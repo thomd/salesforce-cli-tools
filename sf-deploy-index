@@ -5,7 +5,7 @@
 #
 
 org=$1
-session=$2
+session="$2"
 publish=false
 
 mapOption() {
@@ -92,7 +92,7 @@ declare -a options
 while read f; do
   path=$(echo $f | perl -pe 's#force-app/main/default/([^/]*)#\1#' | sed 's/ /#/g')
   options=(${options[@]} "$(mapOption "${path}")")
-done < <((cat $session; git diff HEAD --name-only | sed /labels-meta.xml$/d) | sort | uniq | tee $session)
+done < <((cat "$session"; git diff HEAD --name-only) | sort | uniq | tee "$session")
 
 # all custom label entites are within one single file
 while read label; do
