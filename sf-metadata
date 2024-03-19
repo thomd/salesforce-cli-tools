@@ -54,14 +54,15 @@ org=""
 name=""
 names_list=$(mktemp)
 project=false
+manifest=false
 
 while [ $# -gt 0 ]; do
   case $1 in
-    -o)
+    -o|--org)
       shift
       org=$1
       ;;
-    -m)
+    -m|--metadata)
       shift
       if [[ $name == "" ]]; then
         name=$1
@@ -69,10 +70,13 @@ while [ $# -gt 0 ]; do
         name="${name},${1}"
       fi
       ;;
-    -p)
+    -p|--project)
       project=true
       ;;
-    -h)
+    -x|--manifest)
+      manifest=true
+      ;;
+    -h|--help)
       show_help
       ;;
     *)
@@ -93,10 +97,14 @@ if [[ ! -f "./sfdx-project.json" ]]; then
   exit 1
 fi
 
-if [[ $name == "" ]]; then
+if [[ $name == "" && $manifest == false ]]; then
   name="all"
   [[ $DEBUG == "1" ]] && echo -e "\n   $(tput setaf 0)sf org list metadata-types -o ${org} | jq -r '.metadataObjects[].xmlName'$(tput sgr0)"
   yesno " Retrieve $(tput setaf 4)${name}$(tput sgr0) metadata from $(tput setaf 1)${org}$(tput sgr0) ?"
+elif [[ $name == "" && $manifest == true ]]; then
+  yesno " Retrieve all metadata declared in $(tput setaf 4)manifest/package.xml$(tput sgr0) from $(tput setaf 1)${org}$(tput sgr0) ?"
+  echo "TODO"
+  # sf project retrieve start -x ? Dann aber kein counter!
 else
   names=$(echo ${name} | perl -pe "s/,/, /g" | perl -pe "s/(\w+)/$(tput setaf 4)\1$(tput sgr0)/g")
   [[ $DEBUG == "1" ]] && echo -e "\n   $(tput setaf 0)sf project retrieve start -o ${org} -m ${name//,/ -m }$(tput sgr0)"
