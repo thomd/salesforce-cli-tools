@@ -207,10 +207,12 @@ if [[ $object == "" ]]; then
 else
   echo ${object} | tr -d ' ' | tr ',' '\n' > "$listfile"
 fi
+[[ $DEBUG == "1" ]] && echo -e "   $(tput setaf 0)${listfile}$(tput sgr0)\n"
 
 total=$(cat "$listfile" | wc -l | tr -d ' ')
 mkdir -p ${target}
 c=0
+startTime=$(date +%s)
 while read obj; do
   c=$((c+1))
   echo -e "\n $(tput setaf 8)[${c}/${total}]$(tput sgr0) $(tput setaf 4)${obj}$(tput sgr0):"
@@ -225,6 +227,10 @@ while read obj; do
   [[ $DEBUG == "1" ]] && echo -e "\n   $(tput setaf 0)sf data query -q \"SELECT ${fields} FROM ${obj}\" -o ${org} -r csv$(tput sgr0)\n"
   sf data query -q "SELECT ${fields} FROM ${obj}" -o ${org} -r csv > ${target}/${obj}.csv
   wc -l ${target}/${obj}.csv | awk '{if($1 == "0" || $1 == "1"){print " " $2 ": \033[31mempty"} else if($1 == "2"){print " " $2 ": \033[32m" $1-1 " record"} else {print " " $2 ": \033[32m" $1-1 " records"}}'
-    #awk 'NR == 1; NR > 1 { print $0 | "sort" }' ${target}/${obj}.csv > ${target}/temp; mv ${target}/temp ${target}/${obj}.csv
-    find ${target}/${obj}.csv -type f -size -2c -delete
+  find ${target}/${obj}.csv -type f -size -2c -delete
 done < <(cat "$listfile")
+endTime=$(date +%s)
+duration=$(date -j -f %s $((endTime - startTime)) +%M:%S)
+if [ ! "$duration" == "00:00" ]; then
+  echo -e "\n $(tput setaf 0)download duration: ${duration} min$(tput sgr0)\n"
+fi
