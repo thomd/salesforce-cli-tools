@@ -16,7 +16,7 @@ _sflog_completions() {
       fi
     done
 
-    COMPREPLY=($(compgen -W "-o -u -l -t -h --list --delete" -- ${cur}))
+    COMPREPLY=($(compgen -W "-o --org -u --user -l --level -t --time -h --help --list --delete" -- ${cur}))
     case "${prev}" in
         -o)
             alias=$(cat ~/.sfdx/alias.json | jq -r '.orgs | keys[]')

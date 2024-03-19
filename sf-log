@@ -7,7 +7,7 @@
 #
 #     sf-log                          # update debug-log for autheticated org user
 #     sf-log -o ORG                   # set ORG
-#     sf-log -u USER                  # set user [default: autheticated org user]
+#     sf-log -u USER                  # set user [default: the currently autheticated org user]
 #     sf-log -l DEBUG_LEVEL           # set debug-level [default: SFDC_DevConsole]
 #     sf-log -t MINUTES               # set debug-level for MINUTES min [default: 30]
 #     sf-log --list                   # list debug-log users
@@ -60,19 +60,19 @@ time="30"
 
 while [ $# -gt 0 ]; do
   case $1 in
-    -o)
+    -o|--org)
       shift
       org=$1
       ;;
-    -u)
+    -u|--user)
       shift
       user="$1"
       ;;
-    -l)
+    -l|--level)
       shift
       level="$1"
       ;;
-    -t)
+    -t|--time)
       shift
       time="$1"
       ;;
