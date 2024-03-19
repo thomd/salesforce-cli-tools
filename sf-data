@@ -55,7 +55,7 @@ org=""
 target=".data"
 object=""
 visidata=false
-listfile="object.names"
+listfile=$(mktemp)
 refresh=false
 
 while [ $# -gt 0 ]; do
@@ -203,12 +203,12 @@ if [[ $object == "" ]]; then
     | sed /UserLicense/d \
     | sed /^AuraDefinition/d \
     | sed /^smartlists__/d \
-    > ${listfile}
+    > "$listfile"
 else
-  echo ${object} | tr -d ' ' | tr ',' '\n' > ${listfile}
+  echo ${object} | tr -d ' ' | tr ',' '\n' > "$listfile"
 fi
 
-total=$(cat ${listfile} | wc -l | tr -d ' ')
+total=$(cat "$listfile" | wc -l | tr -d ' ')
 mkdir -p ${target}
 c=0
 while read obj; do
@@ -224,9 +224,7 @@ while read obj; do
     | paste -sd, -)
   [[ $DEBUG == "1" ]] && echo -e "\n   $(tput setaf 0)sf data query -q \"SELECT ${fields} FROM ${obj}\" -o ${org} -r csv$(tput sgr0)\n"
   sf data query -q "SELECT ${fields} FROM ${obj}" -o ${org} -r csv > ${target}/${obj}.csv
-    wc -l ${target}/${obj}.csv | awk '{if($1 == "0" || $1 == "1"){ print " " $2 ": \033[31mempty" } else { print " " $2 ": \033[32m" $1-1 " records" } }'
+  wc -l ${target}/${obj}.csv | awk '{if($1 == "0" || $1 == "1"){print " " $2 ": \033[31mempty"} else if($1 == "2"){print " " $2 ": \033[32m" $1-1 " record"} else {print " " $2 ": \033[32m" $1-1 " records"}}'
     #awk 'NR == 1; NR > 1 { print $0 | "sort" }' ${target}/${obj}.csv > ${target}/temp; mv ${target}/temp ${target}/${obj}.csv
     find ${target}/${obj}.csv -type f -size -2c -delete
-done < <(cat ${listfile})
-
-rm ${listfile}
+done < <(cat "$listfile")
