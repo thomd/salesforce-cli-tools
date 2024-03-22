@@ -33,6 +33,9 @@ mapOption() {
     networks*)
       option="Network:$(echo $1 | perl -pe 's#networks/(.+?)\..+#\1#')"
       ;;
+    networkBranding*)
+      option="NetworkBranding:$(echo $1 | perl -pe 's#networkBranding/(.+?)\..+#\1#')"
+      ;;
     objects*)
       object=$(echo $1 | perl -pe 's#objects/([^/]+?)/(.*)#\1#')
       path=$(echo $1 | perl -pe 's#objects/([^/]+?)/(.*)#\2#' | sed 's/ /#/g')
@@ -98,7 +101,7 @@ done < <((cat "$session"; git diff HEAD --name-only) | sort | uniq | tee "$sessi
 while read label; do
   echo $label
   options=(${options[@]} "CustomLabel:$label")
-done < <(git diff -U6 force-app/main/default/labels/CustomLabels.labels-meta.xml | gawk '/<labels>/{l=1}/<fullName>/{if(l==1)n=gensub(/.*<.+>(.+)<.+>.*/,"\\1","g",$0)}/^+/{if(l==1){c=1}}/<\/labels>/{if(l==1 && c==1)print n;l=0;c=0}')
+done < <(git diff HEAD -U6 force-app/main/default/labels/CustomLabels.labels-meta.xml | gawk '/<labels>/{l=1}/<fullName>/{if(l==1)n=gensub(/.*<.+>(.+)<.+>.*/,"\\1","g",$0)}/^+/{if(l==1){c=1}}/<\/labels>/{if(l==1 && c==1)print n;l=0;c=0}')
 
 uniq_options=($(for option in "${options[@]}"; do echo "${option}"; done | sort -u))
 
