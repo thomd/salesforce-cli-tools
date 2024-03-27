@@ -2,7 +2,8 @@
 
 A collection of bash scripts for my daily work with Salesforce. The scripts are basically wrappers around the `sf` cli tool from Salesforce.
 
-**Disclaimer**: These scripts were created to fit my personal needs. They might not fit your needs, they might not work on your machine, they might not work with your project setup.
+> [!CAUTION]
+> These scripts were created to fit my personal needs. They might not fit your needs, they might not work on your machine, they might not work with your project setup.
 
 ## Install
 
