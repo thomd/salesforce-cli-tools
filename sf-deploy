@@ -102,6 +102,7 @@ deployAll() {
     for sitename in ${sitenames[@]}; do
       [[ $DEBUG == "1" ]] && echo -e "   $(tput setaf 0)sf community publish -n \"${sitename/_/ }\" -o ${org}$(tput sgr0)"
       eval "sf community publish -n \"${sitename/_/ }\" -o ${org} >/dev/null"
+      sleep 30
     done
     [[ $DEBUG == "1" ]] && echo
     domain=$(sf data query -o "$org" -q "SELECT Domain FROM Domain WHERE HttpsOption='CommunityAlt'" --json | jq -r '.result.records[].Domain')
