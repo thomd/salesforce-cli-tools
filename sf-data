@@ -5,12 +5,13 @@
 #
 # USAGE
 #
-#     sf-data                                  # download all data
-#     sf-data -o ORG                           # download from ORG
-#     sf-data -d DIR                           # save data in DIR folder [default: .data]
-#     sf-data -s OBJECT1 -s OBJECT2            # download OBJECT1 and OBJECT2
-#     sf-data -v OBJECT                        # download OBJECT and open in Visidata
-#     sf-data -r                               # refresh data in current directory
+#    sf-data                                  # download all data
+#    sf-data -o ORG                           # download from ORG
+#    sf-data -d DIR                           # save data in DIR folder [default: .data]
+#    sf-data -s OBJECT1 -s OBJECT2            # download OBJECT1 and OBJECT2
+#    sf-data -v OBJECT                        # download OBJECT and open in Visidata
+#    sf-data -r                               # refresh data in current directory
+#    sf-data -l                               # only fetch objects that contained data during the last run
 #
 # EXAMPLES
 #
@@ -57,21 +58,26 @@ object=""
 visidata=false
 listfile=$(mktemp)
 refresh=false
+last=false
+lastfile="/tmp/sf-data.lastobjects"
 
 while [ $# -gt 0 ]; do
   case $1 in
-    -o)
+    -o|--org)
       shift
       org=$1
       ;;
-    -d)
+    -d|--destination)
       shift
       target=$1
       ;;
-    -r)
+    -l|--last)
+      last=true
+      ;;
+    -r|--refresh)
       refresh=true
       ;;
-    -s)
+    -s|--sobject)
       shift
       if [[ $object == "" ]]; then
         object=$1
@@ -79,7 +85,7 @@ while [ $# -gt 0 ]; do
         object="${object},${1}"
       fi
       ;;
-    -v)
+    -v|--visidata)
       shift
       object=$1
       visidata=true
@@ -104,7 +110,13 @@ if [ $refresh == true ]; then
 fi
 
 objects=$(echo ${object} | perl -pe "s/,/, /g" | perl -pe "s/(\w+)/$(tput setaf 4)\1$(tput sgr0)/g")
-yesno " Fetch $([[ ${objects} == "" ]] && echo "$(tput setaf 4)all$(tput sgr0)" || echo ${objects}) data from $(tput setaf 1)${org}$(tput sgr0) ?"
+if [[ $object == "" ]] && [[ $last == "false" ]]; then
+  yesno " Fetch $(tput setaf 4)all$(tput sgr0) data from $(tput setaf 1)${org}$(tput sgr0) ?"
+elif [[ $object == "" ]] && [[ $last == "true" ]]; then
+  yesno " Fetch $(tput setaf 4)all$(tput sgr0) data of $(tput setaf 4)last run$(tput sgr0) from $(tput setaf 1)${org}$(tput sgr0) ?"
+else
+  yesno " Fetch ${objects} data from $(tput setaf 1)${org}$(tput sgr0) ?"
+fi
 
 if [ $visidata == true ]; then
   echo ""
@@ -116,96 +128,12 @@ if [ $visidata == true ]; then
 fi
 
 # this is an opinionated list of sobjects which are either not of interest or do not support queries
-if [[ $object == "" ]]; then
-  sf sobject list -o ${org} -s all \
-    | sed /^ProfileSkill/d \
-    | sed /^Promotion/d \
-    | sed /^Prompt/d \
-    | sed /^Problem/d \
-    | sed /^ChangeRequest/d \
-    | sed /^Chatter/d \
-    | sed /^CollaborationGroup/d \
-    | sed /^CommSubscription/d \
-    | sed /Apex/d \
-    | sed /RecentlyViewed/d \
-    | sed /SetupAuditTrail/d \
-    | sed /UserLogin/d \
-    | sed /FieldPermissions/d \
-    | sed /Event$/d \
-    | sed /__e$/d \
-    | sed /Vote/d \
-    | sed /Access$/d \
-    | sed /SiteDetail/d \
-    | sed /SearchLayout/d \
-    | sed /^Salesforce/d \
-    | sed /^Relationship/d \
-    | sed /RelatedListDefinition/d \
-    | sed /RelatedListColumnDefinition/d \
-    | sed /QuoteTemplateRichTextData/d \
-    | sed /ProcessInstanceHistory/d \
-    | sed /OpenActivity/d \
-    | sed /NoteAndAttachment/d \
-    | sed /NetworkUserHistoryRecent/d \
-    | sed /^Name$/d \
-    | sed /LookedUpFromActivity/d \
-    | sed /LogoutEventStream/d \
-    | sed /ListViewChartInstance/d \
-    | sed /IdeaComment/d \
-    | sed /IconDefinition/d \
-    | sed /FolderedContentDocument/d \
-    | sed /^Flow/d \
-    | sed /^Feed/d \
-    | sed /^Field/d \
-    | sed /FlexQueueItem/d \
-    | sed /EntityParticle/d \
-    | sed /EmailStatus/d \
-    | sed /^Data/d \
-    | sed /ContentFolderMember/d \
-    | sed /ContentFolderItem/d \
-    | sed /ContentDocumentLink/d \
-    | sed /ContentBody/d \
-    | sed /CombinedAttachment/d \
-    | sed /ColorDefinition/d \
-    | sed /^Attached/d \
-    | sed /AsyncOperationStatus/d \
-    | sed /AppTabMember/d \
-    | sed /AggregateResult/d \
-    | sed /ActivityHistory/d \
-    | sed /^AI/d \
-    | sed /^ML/d \
-    | sed /^Incident/d \
-    | sed /^Forecasting/d \
-    | sed /^Location/d \
-    | sed /^Quick/d \
-    | sed /^Quote/d \
-    | sed /^Scorecard/d \
-    | sed /^SocialPost/d \
-    | sed /^Stamp/d \
-    | sed /^TableauHostMapping/d \
-    | sed /^WorkBadge/d \
-    | sed /^WorkOrder/d \
-    | sed /^WorkPlan/d \
-    | sed /^WorkStep/d \
-    | sed /^WorkThanks/d \
-    | sed /^Reputation/d \
-    | sed /OrgLifecycleNotification/d \
-    | sed /^OutgoingEmail/d \
-    | sed /OwnedContentDocument/d \
-    | sed /OwnerChangeOptionInfo/d \
-    | sed /PermissionSetTabSetting/d \
-    | sed /PicklistValueInfo/d \
-    | sed /PlatformAction/d \
-    | sed /AuthSession/d \
-    | sed /BackgroundOperation/d \
-    | sed /CronTrigger/d \
-    | sed /EntityDefinition/d \
-    | sed /OauthToken/d \
-    | sed /UserLicense/d \
-    | sed /^AuraDefinition/d \
-    | sed /^smartlists__/d \
-    > "$listfile"
+if [[ $object == "" ]] && [[ $last == "false" ]]; then
+  sf sobject list -o "$org" -s all > "$listfile"
+elif [[ $object == "" ]] && [[ $last == "true" ]]; then
+  cat "$lastfile" > "$listfile"
 else
-  echo ${object} | tr -d ' ' | tr ',' '\n' > "$listfile"
+  echo "$object" | tr -d ' ' | tr ',' '\n' > "$listfile"
 fi
 [[ $DEBUG == "1" ]] && echo -e "   $(tput setaf 0)${listfile}$(tput sgr0)\n"
 
@@ -213,6 +141,8 @@ total=$(cat "$listfile" | wc -l | tr -d ' ')
 mkdir -p ${target}
 c=0
 startTime=$(date +%s)
+:> $lastfile
+
 while read obj; do
   c=$((c+1))
   echo -e "\n $(tput setaf 8)[${c}/${total}]$(tput sgr0) $(tput setaf 4)${obj}$(tput sgr0):"
@@ -225,10 +155,21 @@ while read obj; do
     | sed /MV_DaysSinceCreated__c/d \
     | paste -sd, -)
   [[ $DEBUG == "1" ]] && echo -e "\n   $(tput setaf 0)sf data query -q \"SELECT ${fields} FROM ${obj}\" -o ${org} -r csv$(tput sgr0)\n"
-  sf data query -q "SELECT ${fields} FROM ${obj}" -o ${org} -r csv > ${target}/${obj}.csv
-  wc -l ${target}/${obj}.csv | awk '{if($1 == "0" || $1 == "1"){print " " $2 ": \033[31mempty"} else if($1 == "2"){print " " $2 ": \033[32m" $1-1 " record"} else {print " " $2 ": \033[32m" $1-1 " records"}}'
+  sf data query -q "SELECT ${fields} FROM ${obj}" -o ${org} -r csv 2> /dev/null > ${target}/${obj}.csv
+  dataSize=$(wc -l ${target}/${obj}.csv | awk '{print $1}')
+  if [[ $dataSize == '0' || $dataSize == '1' ]]; then
+    echo -e " ${target}/${obj}: $(tput setaf 1)empty$(tput sgr0)"
+  else
+    if [[ $dataSize == '2' ]]; then
+      echo -e " ${target}/${obj}: $(tput setaf 2)1 record$(tput sgr0)"
+    else
+      echo -e " ${target}/${obj}: $(tput setaf 2)$((dataSize - 1)) records$(tput sgr0)"
+    fi
+    echo "$obj" >> "$lastfile"
+  fi
   find ${target}/${obj}.csv -type f -size -2c -delete
 done < <(cat "$listfile")
+
 endTime=$(date +%s)
 duration=$(date -j -f %s $((endTime - startTime)) +%M:%S)
 if [ ! "$duration" == "00:00" ]; then
