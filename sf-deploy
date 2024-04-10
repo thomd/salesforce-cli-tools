@@ -52,11 +52,11 @@ all=false
 
 while [ $# -gt 0 ]; do
   case $1 in
-    -o)
+    -o|--org)
       shift
       org=$1
       ;;
-    -m)
+    -m|--metadata)
       shift
       if [[ $names == "" ]]; then
         [[ $1 = *" "* ]] && names="\"$1\"" || names="$1"
@@ -64,7 +64,7 @@ while [ $# -gt 0 ]; do
         [[ $1 = *" "* ]] && names="${names} -m \"$1\"" || names="${names} -m $1"
       fi
       ;;
-    -x)
+    -x|--manifest)
       all=true
       ;;
     -h|--help)

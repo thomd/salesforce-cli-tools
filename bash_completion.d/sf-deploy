@@ -6,7 +6,7 @@ _sfdeploy_completions() {
     prev="${COMP_WORDS[COMP_CWORD-1]}"
     cache="/tmp/sf-metadata.sobjects"
 
-    COMPREPLY=($(compgen -W "-o -d -s -v -r -h" -- ${cur}))
+    COMPREPLY=($(compgen -W "-o --org -m --metadata -x --manifest -h --help" -- ${cur}))
     case "${prev}" in
         -o)
             alias=$(cat ~/.sfdx/alias.json | jq -r '.orgs | keys[]')
