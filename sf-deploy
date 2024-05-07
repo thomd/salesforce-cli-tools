@@ -16,6 +16,7 @@
 #     sf project deploy start -x manifest/package.xml --concise
 #     sf project deploy start -m NAME
 #     sf community publish -n SITE_NAME
+#     nodemon -w force-app -e "EXT,EXT" -x "sf project deploy start -m NAME"
 #
 
 yesno() {
