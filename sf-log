@@ -17,6 +17,7 @@
 #
 #     sf-log
 #     less debug.log
+#     tail -f -n +1 debug.log | rg USER_DEBUG
 #
 # COMMANDS
 #
