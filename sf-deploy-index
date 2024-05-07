@@ -115,7 +115,7 @@ if [[ ${#uniq_options[@]} == 0 ]]; then
   echo -e " $(tput setaf 1)git index is empty, nothing to deploy$(tput sgr0) ...\n"
   exit 1
 else
-  echo -e " found $(tput setaf 2)${#options[@]} file$([[ ! ${#options[@]} -eq 1 ]] && echo "s")$(tput sgr0) in git-index and deploy-session for $(tput setaf 2)${#uniq_options[@]} metadata-entit$([[ ${#uniq_options[@]} -eq 1 ]] && echo "y" || echo "ies")$(tput sgr0) to deploy ...\n"
+  echo -e " found $(tput setaf 2)${#options[@]} file$([[ ! ${#options[@]} -eq 1 ]] && echo "s")$(tput sgr0) in git-index and in deploy-session for $(tput setaf 2)${#uniq_options[@]} metadata-entit$([[ ${#uniq_options[@]} -eq 1 ]] && echo "y" || echo "ies")$(tput sgr0) to deploy ...\n"
   opts=''
   for p in ${uniq_options[@]}; do
     if [[ $p = *"#"* ]]; then
