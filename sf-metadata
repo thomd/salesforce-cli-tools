@@ -118,7 +118,7 @@ if [[ ! -f "./sfdx-project.json" ]]; then
   exit 1
 fi
 
-if [[ ! -f "./manifest/package.xml" ]]; then
+if [[ ! -f "./manifest/package.xml" ]] && [[ $manifest == true ]]; then
   echo -e >&2 "\n $(tput setaf 1)no package manifest$(tput sgr0)"
   exit 1
 fi
