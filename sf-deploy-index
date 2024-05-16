@@ -17,6 +17,9 @@ mapOption() {
     classes*)
       option="ApexClass:$(echo $1 | perl -pe 's#classes/(.+?)\..+#\1#')"
       ;;
+    email*)
+      option="EmailTemplate:$(echo $1 | perl -pe 's#email/(.+?)\..+#\1#')"
+      ;;
     experiences*)
       option="ExperienceBundle:$(echo $1 | perl -pe 's#experiences/(.+?)/.+#\1#')"
       publish=true
@@ -112,7 +115,7 @@ done < <(git diff HEAD -U6 force-app/main/default/labels/CustomLabels.labels-met
 uniq_options=($(for option in "${options[@]}"; do echo "${option}"; done | sort -u))
 
 if [[ ${#uniq_options[@]} == 0 ]]; then
-  echo -e " $(tput setaf 1)git index is empty, nothing to deploy$(tput sgr0) ...\n"
+  echo -e " $(tput setaf 1)git index does not contain any sf-metadata, nothing to deploy$(tput sgr0) ...\n"
   exit 1
 else
   echo -e " found $(tput setaf 2)${#options[@]} file$([[ ! ${#options[@]} -eq 1 ]] && echo "s")$(tput sgr0) in git-index and in deploy-session for $(tput setaf 2)${#uniq_options[@]} metadata-entit$([[ ${#uniq_options[@]} -eq 1 ]] && echo "y" || echo "ies")$(tput sgr0) to deploy ...\n"
