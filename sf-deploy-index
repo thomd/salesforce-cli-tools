@@ -17,6 +17,12 @@ mapOption() {
     classes*)
       option="ApexClass:$(echo $1 | perl -pe 's#classes/(.+?)\..+#\1#')"
       ;;
+    contentassets*)
+      option="ContentAsset:$(echo $1 | perl -pe 's#contentassets/(.+?)\..+#\1#')"
+      ;;
+    documents*)
+      option="Document:$(echo $1 | perl -pe 's#documents/(.+?)\..+#\1#')"
+      ;;
     email*)
       option="EmailTemplate:$(echo $1 | perl -pe 's#email/(.+?)\..+#\1#')"
       ;;
