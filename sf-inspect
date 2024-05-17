@@ -7,12 +7,21 @@
 #
 #     sf-inspect labels               # list custom-labels on local metadata, package-manifest, translation-files and usage
 #     sf-inspect permissions          # compare settings of locally managed profiles and permission-sets
+#     sf-inspect object KEY           # get entity definition for a key-prefix
 #     sf-inspect -d DIR               # save generated csv file in DIR folder [default: .data]
 #
 # EXAMPLES
 #
 #     sf-metadata -m CustomLabels
 #     sf-inspect labels
+#
+#     sf-inspect object 001
+#     sf-data -v EntityDefinition
+#
+# COMMANDS
+#
+#     sf data query -t -q "SELECT Label, QualifiedApiName FROM EntityDefinition WHERE KeyPrefix='001'"
+#
 
 yesno() {
   echo ""

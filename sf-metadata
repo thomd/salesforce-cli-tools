@@ -135,6 +135,7 @@ if [[ $name == "" && $manifest == false ]]; then
     | sed /EventRelayConfig/d \
     | sed /RegisteredExternalService/d \
     | sed /PortalDelegablePermissionSet/d \
+    | sed /WaveAnalyticAssetCollection/d \
     | sort \
     > "$names_list"
 elif [[ $name == "" && $manifest == true ]]; then
