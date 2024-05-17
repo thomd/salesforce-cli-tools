@@ -127,9 +127,11 @@ if [[ $name == "" && $manifest == false ]]; then
   name="all"
   [[ $DEBUG == "1" ]] && echo -e "\n   $(tput setaf 0)sf org list metadata-types -o ${org} | jq -r '.metadataObjects[].xmlName'$(tput sgr0)"
   yesno " Retrieve $(tput setaf 4)${name}$(tput sgr0) metadata from $(tput setaf 1)${org}$(tput sgr0) ?"
+  # exclude metadata types which are not supported
   sf org list metadata-types -o ${org} \
     | jq -r '.metadataObjects[].xmlName' \
     | sed /ProcessFlowMigration/d \
+    | sed /ExperienceContainer/d \
     | sed /EventRelayConfig/d \
     | sed /RegisteredExternalService/d \
     | sed /PortalDelegablePermissionSet/d \
