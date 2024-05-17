@@ -126,7 +126,7 @@ fi
 if [[ $name == "" && $manifest == false ]]; then
   name="all"
   [[ $DEBUG == "1" ]] && echo -e "\n   $(tput setaf 0)sf org list metadata-types -o ${org} | jq -r '.metadataObjects[].xmlName'$(tput sgr0)"
-  yesno " Retrieve $(tput setaf 4)${name}$(tput sgr0) metadata from $(tput setaf 1)${org}$(tput sgr0) ?"
+  yesno " Retrieve $(tput setaf 4)${name}$(tput sgr0) metadata from $(tput setaf 1)${org}$(tput sgr0)?"
   # exclude metadata types which are not supported
   sf org list metadata-types -o ${org} \
     | jq -r '.metadataObjects[].xmlName' \
@@ -139,14 +139,14 @@ if [[ $name == "" && $manifest == false ]]; then
     | sort \
     > "$names_list"
 elif [[ $name == "" && $manifest == true ]]; then
-  yesno " Retrieve all metadata declared in $(tput setaf 4)manifest/package.xml$(tput sgr0) from $(tput setaf 1)${org}$(tput sgr0) ?"
+  yesno " Retrieve all metadata declared in $(tput setaf 4)manifest/package.xml$(tput sgr0) from $(tput setaf 1)${org}$(tput sgr0)?"
   [[ $DEBUG == "1" ]] && echo -e "\n   $(tput setaf 0)sf project retrieve start -o ${org} -x manifest/package.xml$(tput sgr0)\n"
   sf project retrieve start -o "$org" -x manifest/package.xml > /dev/null
   exit 0
 else
   names=$(echo ${name} | perl -pe "s/,/, /g" | perl -pe "s/(\w+)/$(tput setaf 4)\1$(tput sgr0)/g")
   [[ $DEBUG == "1" ]] && echo -e "\n   $(tput setaf 0)sf project retrieve start -o ${org} -m ${name//,/ -m }$(tput sgr0)"
-  yesno " Retrieve metadata ${names} from $(tput setaf 1)${org}$(tput sgr0) ?"
+  yesno " Retrieve metadata ${names} from $(tput setaf 1)${org}$(tput sgr0)?"
   echo ${name} | tr -d ' ' | tr ',' '\n' > "$names_list"
 fi
 
