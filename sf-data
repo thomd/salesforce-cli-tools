@@ -27,11 +27,12 @@
 
 yesno() {
   echo ""
-  read -p "$1 [Y/n] " response
+  read -r -p "$1 [Y/n] " response
   [[ $response == "n" || $response == "N" ]] && exit 1
 }
 
 show_help() {
+  # shellcheck disable=SC2086
   awk '/^[^ #]/{c=1}c==0{print $0}' $0 | sed -n '/^#/p' | sed 1d | sed 's/^#/ /g' \
     | perl -pe "s/ #(.*)$/$(tput setaf 0)\1$(tput sgr 0)/" \
     | perl -pe "s/(USAGE|EXAMPLES|COMMANDS)/$(tput setaf 0)\1$(tput sgr 0)/" \
