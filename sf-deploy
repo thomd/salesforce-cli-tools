@@ -95,7 +95,7 @@ deployAll() {
   sf project deploy start -x manifest/package.xml --concise -o "$org" > "$result"
   # shellcheck disable=SC2181
   if [[ $? == 0 ]]; then
-    echo -e "\n $(tput setaf 2)Publish$(tput sgr0) ..."
+    echo -e " $(tput setaf 2)Publish$(tput sgr0) ..."
     declare -a sitenames
     sitenames=("${sitenames[@]}" "$(sf data query -o "$org" -q "SELECT Name FROM Site WHERE SiteType='ChatterNetwork'" --json | jq -r '.result.records[].Name')")
     [[ $DEBUG == "1" ]] && echo

@@ -84,6 +84,9 @@ mapOption() {
     quickActions*)
       option="QuickAction:$(echo $1 | perl -pe 's#quickActions/(.+?\..+?)\..+#\1#')"
       ;;
+    settings*)
+      option="Settings:$(echo $1 | perl -pe 's#settings/(.+?)\..+#\1#')"
+      ;;
     sites*)
       option="CustomSite:$(echo $1 | perl -pe 's#sites/(.+?)\..+#\1#')"
       ;;
