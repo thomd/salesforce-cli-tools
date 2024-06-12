@@ -8,7 +8,7 @@
 #    sf-data                                  # download all data
 #    sf-data -o ORG                           # download from ORG
 #    sf-data -d DIR                           # save data in DIR folder [default: .data]
-#    sf-data -s OBJECT1 -s OBJECT2            # download OBJECT1 and OBJECT2
+#    sf-data -s OBJECT_1 -s OBJECT_2          # download OBJECT_1 and OBJECT_2
 #    sf-data -v OBJECT                        # download OBJECT and open in Visidata
 #    sf-data -r                               # refresh data in current directory
 #    sf-data -l                               # only fetch objects that contained data during the last run
@@ -23,6 +23,8 @@
 #     sf sobject list -s all -o ORG
 #     sf sobject describe -s OBJECT -o ORG | jq -r '.fields[].name' | paste -sd, -
 #     sf data query -q "select FIELDS from OBJECT" -o ORG
+#
+#     rm /tmp/sf-data.objects                 # delete cached objects for bash-completion
 #
 
 yesno() {
@@ -157,14 +159,14 @@ while read obj; do
     | paste -sd, -)
   [[ $DEBUG == "1" ]] && echo -e "\n   $(tput setaf 0)sf data query -q \"SELECT ${fields} FROM ${obj}\" -o ${org} -r csv$(tput sgr0)\n"
   sf data query -q "SELECT ${fields} FROM ${obj}" -o ${org} -r csv 2> /dev/null > ${target}/${obj}.csv
-  dataSize=$(wc -l ${target}/${obj}.csv | awk '{print $1}')
-  if [[ $dataSize == '0' || $dataSize == '1' ]]; then
+  dataSize=$(csvtk nrow ${target}/${obj}.csv)
+  if [ $dataSize == '0' ]; then
     echo -e " ${target}/${obj}: $(tput setaf 1)empty$(tput sgr0)"
   else
-    if [[ $dataSize == '2' ]]; then
+    if [[ $dataSize == '1' ]]; then
       echo -e " ${target}/${obj}: $(tput setaf 2)1 record$(tput sgr0)"
     else
-      echo -e " ${target}/${obj}: $(tput setaf 2)$((dataSize - 1)) records$(tput sgr0)"
+      echo -e " ${target}/${obj}: $(tput setaf 2)${dataSize} records$(tput sgr0)"
     fi
     echo "$obj" >> "$lastfile"
   fi
