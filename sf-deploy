@@ -13,6 +13,8 @@
 # COMMANDS
 #
 #     (cd frontend && npm run frontend:build)
+#     nodemon -e scss -w frontend -x "(cd frontend; npm run frontend:build:deploy)"
+#
 #     sf project deploy start -x manifest/package.xml --concise
 #     sf project deploy start -m NAME
 #     sf community publish -n SITE_NAME
