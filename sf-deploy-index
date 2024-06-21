@@ -30,6 +30,9 @@ mapOption() {
       option="ExperienceBundle:$(echo $1 | perl -pe 's#experiences/(.+?)/.+#\1#')"
       publish=true
       ;;
+    externalCredentials*)
+      option="ExternalCredential:$(echo $1 | perl -pe 's#externalCredentials/(.+?)\..+#\1#')"
+      ;;
     flexipages*)
       option="FlexiPage:$(echo $1 | perl -pe 's#flexipages/(.+?)\..+#\1#')"
       ;;
@@ -44,6 +47,9 @@ mapOption() {
       ;;
     lwc*)
       option="LightningComponentBundle:$(echo $1 | perl -pe 's#lwc/(.+?)/.+#\1#')"
+      ;;
+    namedCredentials*)
+      option="NamedCredential:$(echo $1 | perl -pe 's#namedCredentials/(.+?)\..+#\1#')"
       ;;
     networks*)
       option="Network:$(echo $1 | perl -pe 's#networks/(.+?)\..+#\1#')"
