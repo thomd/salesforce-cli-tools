@@ -15,13 +15,13 @@
 #
 # EXAMPLES
 #
-#    sf-metadata -p -o org1; sf-metadata -p -o org2; diff -qr org1 org2            # compare metadata of org1 and org2
-#    sf-metadata -P; sf-metadata -P; diff -qr org_001 org_002                      # compare metadata of an org at two different points in time
+#    sf-metadata -p -o org1; sf-metadata -p -o org2; diff -qr org1 org2                                      # compare metadata of org1 and org2
+#    sf-metadata -P; sf-metadata -P; diff -qr org_001 org_002                                                # compare metadata of an org at two different points in time
 #
 # COMMANDS
 #
-#    sf org list metadata-types -o ORG | jq -r '.metadataObjects[].xmlName'
-#    sf project retrieve start -o ORG -m NAME:MEMBER
+#    sf org list metadata-types | jq -r '.metadataObjects[].xmlName, .metadataObjects[].childXmlNames[]'     # list of all metadata types
+#    sf project retrieve start -m NAME:MEMBER                                                                # retrieve metadata of type NAME:MEMBER
 #
 #    echo '{"packageDirectories": [{"path": "force-app"}]}' > sfdx-project.json; mkdir force-app;
 #    while read name; do sf project retrieve start -m $name; done < <(sf org list metadata-types | jq -r '.metadataObjects[].xmlName')
@@ -155,7 +155,6 @@ c=0
 while read name; do
   c=$((c+1))
   echo -e "\n $(tput setaf 8)[${c}/${total}]$(tput sgr0) $(tput setaf 4)${name}$(tput sgr0)"
-  #sf project retrieve start -o "$org" -m "$name" |& tee temp 2>&1 > /dev/null
   sf project retrieve start -o "$org" -m "$name" > /dev/null
 done < <(cat "$names_list")
 
