@@ -111,6 +111,7 @@ if [ $silent == false ]; then
     fi
   done < <(fd -I -e csv)
   echo "}" >> $dotfile
+  [[ $DEBUG == "1" ]] && echo -e "\n$(tput setaf 0)$(cat $dotfile)$(tput sgr0)"
   echo
   cat $dotfile \
     | graph-easy --from=dot --as=boxart \
