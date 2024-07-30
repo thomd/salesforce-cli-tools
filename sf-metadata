@@ -15,13 +15,14 @@
 #
 # EXAMPLES
 #
-#    sf-metadata -p -o org1; sf-metadata -p -o org2; diff -qr org1 org2                                      # compare metadata of org1 and org2
-#    sf-metadata -P; sf-metadata -P; diff -qr org_001 org_002                                                # compare metadata of an org at two different points in time
+#    sf-metadata -p -o org1; sf-metadata -p -o org2; diff -qr org1 org2                                               # compare metadata of org1 and org2
+#    sf-metadata -P; sf-metadata -P; diff -qr org_001 org_002                                                         # compare metadata of an org at two different points in time
+#    sf-metadata -m ExperienceBundle -m Audience -m NavigationMenu -m NetworkBranding -m Network -m CustomSite        # retrieve Expereince Builder related metadata
 #
 # COMMANDS
 #
-#    sf org list metadata-types | jq -r '.metadataObjects[].xmlName, .metadataObjects[].childXmlNames[]'     # list of all metadata types
-#    sf project retrieve start -m NAME:MEMBER                                                                # retrieve metadata of type NAME:MEMBER
+#    sf org list metadata-types | jq -r '.metadataObjects[].xmlName, .metadataObjects[].childXmlNames[]'              # list of all metadata types
+#    sf project retrieve start -m NAME:MEMBER                                                                         # retrieve metadata of type NAME:MEMBER
 #
 #    echo '{"packageDirectories": [{"path": "force-app"}]}' > sfdx-project.json; mkdir force-app;
 #    while read name; do sf project retrieve start -m $name; done < <(sf org list metadata-types | jq -r '.metadataObjects[].xmlName')
