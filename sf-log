@@ -133,12 +133,12 @@ if [[ $traceid == "null" ]]; then
   yesno " Create new debug log for $(tput setaf 2)${user}$(tput sgr0) with log-level $(tput setaf 2)${level}$(tput sgr0) for $(tput setaf 2)${time} min$(tput sgr0) on $(tput setaf 1)${org}$(tput sgr0) ?"
   levelid=$(sf data query -q "SELECT Id FROM DebugLevel WHERE DeveloperName='${level}'" -t -o ${org} --json | jq -r '.result.records[0].Id')
   userid=$(sf data query -q "SELECT Id from User WHERE Username='${user}'" -o ${org} --json | jq -r '.result.records[0].Id')
-  [[ $DEBUG == "1" ]] && echo -e "\n   $(tput setaf 0)sf data create record -o ${org} -s TraceFlag -v "TracedEntityId=${userid} StartDate=${startdate} ExpirationDate=${expirationdate} DebugLevelId=${levelid} LogType=USER_DEBUG" -t$(tput sgr0)"
+  [[ $DEBUG == "1" ]] && echo -e "\n   $(tput setaf 0)sf data create record -o ${org} -s TraceFlag -v \"TracedEntityId=${userid} StartDate=${startdate} ExpirationDate=${expirationdate} DebugLevelId=${levelid} LogType=USER_DEBUG\" -t$(tput sgr0)"
   sf data create record -o ${org} -s TraceFlag -v "TracedEntityId=${userid} StartDate=${startdate} ExpirationDate=${expirationdate} DebugLevelId=${levelid} LogType=USER_DEBUG" -t --json > /dev/null
 else
   yesno " Update debug log for $(tput setaf 2)${user}$(tput sgr0) with log-level $(tput setaf 2)${level}$(tput sgr0) for $(tput setaf 2)${time} min$(tput sgr0) on $(tput setaf 1)${org}$(tput sgr0) ?"
   levelid=$(sf data query -q "SELECT Id FROM DebugLevel WHERE DeveloperName='${level}'" -t -o ${org} --json | jq -r '.result.records[0].Id')
-  [[ $DEBUG == "1" ]] && echo -e "\n   $(tput setaf 0)sf data update record -o ${org} -s TraceFlag -i ${traceid} -v "StartDate=${startdate} ExpirationDate=${expirationdate} DebugLevelId=${levelid} -t"$(tput sgr0)"
+  [[ $DEBUG == "1" ]] && echo -e "\n   $(tput setaf 0)sf data update record -o ${org} -s TraceFlag -i ${traceid} -v \"StartDate=${startdate} ExpirationDate=${expirationdate} DebugLevelId=${levelid}\" -t$(tput sgr0)"
   sf data update record -o ${org} -s TraceFlag -i ${traceid} -v "StartDate=${startdate} ExpirationDate=${expirationdate} DebugLevelId=${levelid}" -t --json > /dev/null
 fi
 
