@@ -14,6 +14,9 @@ mapOption() {
     audience*)
       option="Audience:$(echo $1 | perl -pe 's#audience/(.+?)\..+#\1#')"
       ;;
+    aura*)
+      option="AuraDefinitionBundle:$(echo $1 | perl -pe 's#aura/(.+?)/.+#\1#')"
+      ;;
     classes*)
       option="ApexClass:$(echo $1 | perl -pe 's#classes/(.+?)\..+#\1#')"
       ;;
