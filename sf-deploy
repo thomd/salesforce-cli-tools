@@ -89,7 +89,7 @@ showresult() {
 }
 
 deployAll() {
-  echo -e "\n $(tput setaf 2)Build Frontend CSS$(tput sgr0) ..."
+  echo -e "\n $(tput setaf 2)Build Frontend CSS and Site Theme$(tput sgr0) ..."
   [[ $DEBUG == "1" ]] && echo -e "\n   $(tput setaf 0)(cd frontend && npm run frontend:build)$(tput sgr0)\n"
   (cd frontend && npm run frontend:build >/dev/null)
   echo " $(tput setaf 2)Deploy$(tput sgr0) ..."
