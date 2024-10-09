@@ -13,7 +13,7 @@
 # COMMANDS
 #
 #     (cd frontend && npm run frontend:build)
-#     nodemon -e scss -w frontend -x "(cd frontend; npm run frontend:build:deploy)"
+#     nodemon -e scss -w frontend -x "(cd frontend; npm run frontend:build)"
 #
 #     sf project deploy start -x manifest/package.xml --concise
 #     sf project deploy start -m NAME
@@ -113,7 +113,6 @@ deployAll() {
   else
     showresult "$org"
   fi
-  git restore force-app/main/default/staticresources/b2bTheme.css
 }
 
 if [[ ! $names == "" ]]; then
