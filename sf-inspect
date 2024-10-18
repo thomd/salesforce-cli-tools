@@ -130,6 +130,7 @@ write_permissions() {
 target=".data"
 labels=false
 permissions=false
+object=false
 sfns="http://soap.sforce.com/2006/04/metadata"
 
 [[ -z "$1" ]] && show_help
@@ -146,6 +147,11 @@ while [ $# -gt 0 ]; do
     permissions)
       permissions=true
       ;;
+    object)
+      object=true
+      shift
+      key=$1
+      ;;
     -h|--help)
       show_help
       ;;
@@ -154,8 +160,16 @@ while [ $# -gt 0 ]; do
   esac
   shift
 done
-[ ! -f "./sfdx-project.json" ] && echo -e >&2 "\n $(tput setaf 1)not a SFDX project$(tput sgr0)" && exit 1
+[[ ! -f "./sfdx-project.json" && ($labels == true || $permissions == true) ]] && echo -e >&2 "\n $(tput setaf 1)not a SFDX project$(tput sgr0)" && exit 1
 mkdir -p "$target"
+
+if [[ $object == true ]]; then
+  echo
+  sf data query -t -q "SELECT Label, QualifiedApiName FROM EntityDefinition WHERE KeyPrefix='${key}'" --json \
+    | jq -r '.result.records[] | " \u001b[0;32m'"${key}"':\u001b[0m \(.Label) \u001b[30m(API: \(.QualifiedApiName))\u001b[0m"'
+  [ -z "$key" ] && echo -e >&2 "\n $(tput setaf 1)Object key is missing$(tput sgr0)" && exit 1
+  exit 0
+fi
 
 if [[ $labels == true ]]; then
   yesno " Inspect $(tput setaf 4)custom-labels$(tput sgr0) and $(tput setaf 4)translations$(tput sgr0) of local $(tput setaf 1)SFDX project$(tput sgr0) ?"
