@@ -100,11 +100,11 @@ if [ $silent == false ]; then
       dot="${obj} [ label = \"#${obj}"
     fi
     if [[ ! "$obj" == "$sobj" ]]; then
-      dot="${dot} \\n Id:~$(csvtk transpose "$f" | rg "^Id," | csvtk cut -f 2)"
+      dot="${dot} \\n Id:~$(csvtk transpose "$f" | rg --color=never "^Id," | csvtk cut -f 2)"
     fi
     while read -r col; do
       dot="${dot} \\n $(echo ${col} | csvtk cut -f 1):~$(echo ${col} | csvtk cut -f 2)"
-    done < <(csvtk transpose "$f" | rg "$id")
+    done < <(csvtk transpose "$f" | rg --color=never "$id")
     echo "${dot}\" ]" >> $dotfile
     if [[ ! "$obj" == "$sobj" ]]; then
       echo "${obj} -- ${sobj}" >> $dotfile
@@ -113,6 +113,8 @@ if [ $silent == false ]; then
   echo "}" >> $dotfile
   [[ $DEBUG == "1" ]] && echo -e "\n$(tput setaf 0)$(cat $dotfile)$(tput sgr0)"
   echo
+
+  cat $dotfile
   cat $dotfile \
     | graph-easy --from=dot --as=boxart \
     | perl -pe "s/@(.+?) / $(tput setaf 1)\1$(tput sgr 0) /g" \
