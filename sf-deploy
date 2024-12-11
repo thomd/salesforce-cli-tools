@@ -13,7 +13,7 @@
 # COMMANDS
 #
 #     (cd frontend && npm run frontend:build)
-#     nodemon -e scss -w frontend -x "(cd frontend; npm run frontend:build)"
+#     nodemon -e scss -w frontend -x "(cd frontend; npm run frontend:build) && sf project deploy start -m StaticResource:b2bTheme"
 #
 #     sf project deploy start -x manifest/package.xml --concise
 #     sf project deploy start -m NAME
@@ -92,9 +92,9 @@ deployAll() {
   echo -e "\n $(tput setaf 2)Build Frontend CSS and Site Theme$(tput sgr0) ..."
   [[ $DEBUG == "1" ]] && echo -e "\n   $(tput setaf 0)(cd frontend && npm run frontend:build)$(tput sgr0)\n"
   (cd frontend && npm run frontend:build >/dev/null)
-  echo " $(tput setaf 2)Deploy$(tput sgr0) ..."
+  echo -e "\n $(tput setaf 2)Deploy$(tput sgr0) ..."
   [[ $DEBUG == "1" ]] && echo -e "\n   $(tput setaf 0)sf project deploy start -x manifest/package.xml --concise -o ${org}$(tput sgr0)\n"
-  sf project deploy start -x manifest/package.xml --concise -o "$org" > "$result"
+  sf project deploy start -x manifest/package.xml --concise -o "$org" | tee "$result"
   # shellcheck disable=SC2181
   if [[ $? == 0 ]]; then
     echo -e " $(tput setaf 2)Publish$(tput sgr0) ..."
@@ -109,7 +109,7 @@ deployAll() {
     done
     [[ $DEBUG == "1" ]] && echo
     domain=$(sf data query -o "$org" -q "SELECT Domain FROM Domain WHERE HttpsOption='CommunityAlt'" --json | jq -r '.result.records[].Domain')
-    echo -e " $(tput setaf 2)Finish$(tput sgr0): ${domain}"
+    echo -e "\n $(tput setaf 2)Finish$(tput sgr0): ${domain}"
   else
     showresult "$org"
   fi
@@ -118,8 +118,8 @@ deployAll() {
 if [[ ! $names == "" ]]; then
   yesno " Deploy Metadata $(echo "$names" | perl -pe "s/ -m/,/g" | perl -pe "s/(\w+)/$(tput setaf 4)\1$(tput sgr0)/g") to $(tput setaf 1)${org}$(tput sgr0)?"
   echo
-  [[ $DEBUG == "1" ]] && echo -e "   $(tput setaf 0)sf project deploy start -o ${org} -m ${names}$(tput sgr0)\n"
-  eval "sf project deploy start -o ${org} -m ${names}"
+  [[ $DEBUG == "1" ]] && echo -e "   $(tput setaf 0)sf project deploy start --concise -o ${org} -m ${names}$(tput sgr0)\n"
+  eval "sf project deploy start -o ${org} -m ${names} --concise"
 elif [[ $(git diff HEAD --name-only | wc -l | tr -d ' ') == 0 || $all == true ]]; then
   yesno " Build, Deploy and Publish to $(tput setaf 1)${org}$(tput sgr0)?"
   deployAll
