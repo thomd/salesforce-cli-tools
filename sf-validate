@@ -5,12 +5,13 @@
 #
 # USAGE
 #
+#     sf-validate                  # validate deployment with unit tests
 #     sf-validate -o ORG           # validate deployment with unit tests on ORG
 #     sf-validate -n               # validate deployment without unit tests
 #
 # COMMANDS
 #
-#     TESTS=$(sed s/,$// scripts/test/unit-test-list.txt | awk '{ printf(" -t %s", $0) }')
+#     TESTS=$(awk '{ printf(" -t %s", $0) }' scripts/test/unit-test-list.txt)
 #     sf project deploy validate -x manifest/package.xml -l RunSpecifiedTests $TESTS -o ORG             # validate and run specific unit-tests
 #
 #     sf project deploy start -x manifest/package.xml --dry-run --concise -l NoTestRun -o ORG           # validate only
@@ -78,7 +79,7 @@ if [ $unittests == true ]; then
   yesno " Validate and run Unit Tests on $(tput setaf 1)${org}$(tput sgr0) ?"
   echo -e "\n $(tput setaf 2)Validate and run Unit Tests$(tput sgr0) ..."
   [[ $DEBUG == "1" ]] && echo -e "\n   $(tput setaf 0)sf project deploy validate -x manifest/package.xml -o ${org} -l RunSpecifiedTests [-t ...] $(tput sgr0)\n"
-  sf project deploy validate -x manifest/package.xml -l RunSpecifiedTests `sed s/,$// scripts/test/unit-test-list.txt | awk '{ printf(" -t %s", $0) }'` -o ${org} > ${result}
+  sf project deploy validate -x manifest/package.xml -l RunSpecifiedTests $(awk '{ printf(" -t %s", $0) }' scripts/test/unit-test-list.txt) -o ${org} > ${result}
 else
   yesno " Validate on $(tput setaf 1)${org}$(tput sgr0) ?"
   echo -e "\n $(tput setaf 2)Validate$(tput sgr0) ..."
