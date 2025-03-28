@@ -16,8 +16,8 @@
 # EXAMPLES
 #
 #    sf-metadata -p -o org1; sf-metadata -p -o org2; diff -qr org1 org2                                               # compare metadata of org1 and org2
-#    sf-metadata -P; sf-metadata -P; diff -qr org_001 org_002                                                         # compare metadata of an org at two different points in time
-#    sf-metadata -m ExperienceBundle -m Audience -m NavigationMenu -m NetworkBranding -m Network -m CustomSite        # retrieve Expereince Builder related metadata
+#    sf-metadata -P; sf-metadata -P; diff -qr org_001 org_002                                                         # compare metadata of an org at different times
+#    sf-metadata -m ExperienceBundle -m Audience -m NavigationMenu -m NetworkBranding -m Network -m CustomSite        # retrieve Experience Builder related metadata
 #
 # COMMANDS
 #
@@ -126,11 +126,11 @@ fi
 
 if [[ $name == "" && $manifest == false ]]; then
   name="all"
-  [[ $DEBUG == "1" ]] && echo -e "\n   $(tput setaf 0)sf org list metadata-types -o ${org} | jq -r '.metadataObjects[].xmlName'$(tput sgr0)"
+  [[ $DEBUG == "1" ]] && echo -e "\n   $(tput setaf 0)sf org list metadata-types --json -o ${org} | jq -r '.result.metadataObjects[].xmlName'$(tput sgr0)"
   yesno " Retrieve $(tput setaf 4)${name}$(tput sgr0) metadata from $(tput setaf 1)${org}$(tput sgr0)?"
   # exclude metadata types which are not supported
-  sf org list metadata-types -o ${org} \
-    | jq -r '.metadataObjects[].xmlName' \
+  sf org list metadata-types --json -o ${org} \
+    | jq -r '.result.metadataObjects[].xmlName' \
     | sed /ProcessFlowMigration/d \
     | sed /ExperienceContainer/d \
     | sed /EventRelayConfig/d \
