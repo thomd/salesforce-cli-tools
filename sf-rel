@@ -60,9 +60,11 @@ while read f; do
   [ ! -f "${f}.orig" ] && cp "$f" "${f}.orig"
 done < <(fd -I -e csv)
 
-# remove some Id-columns we are not interested in
+# clean up for proper line based bash operations:
+#    1. remove some Id-columns we are not interested in
+#    2. replace line breaks within quoted fields with white space
 while read f; do
-  csvtk cut -m -f -OwnerId,-CreatedById,-LastModifiedById,-RecordTypeId,-ProfileId "$f" > ${tmp}
+  csvtk cut -m -f -OwnerId,-CreatedById,-LastModifiedById,-RecordTypeId,-ProfileId "$f" | csvtk replace -f '1-' -p '\n' -r ' ' > ${tmp}
   mv ${tmp} "$f"
 done < <(fd -I -e csv)
 
@@ -114,7 +116,6 @@ if [ $silent == false ]; then
   [[ $DEBUG == "1" ]] && echo -e "\n$(tput setaf 0)$(cat $dotfile)$(tput sgr0)"
   echo
 
-  cat $dotfile
   cat $dotfile \
     | graph-easy --from=dot --as=boxart \
     | perl -pe "s/@(.+?) / $(tput setaf 1)\1$(tput sgr 0) /g" \
