@@ -125,9 +125,11 @@ while read f; do
 done < <((cat "$session"; git diff HEAD --name-only) | sort | uniq | tee "$session")
 
 # all custom label entites are within one single file
-while read label; do
-  options=(${options[@]} "CustomLabel:$label")
-done < <(git diff HEAD -U6 force-app/main/default/labels/CustomLabels.labels-meta.xml | gawk '/<labels>/{l=1}/<fullName>/{if(l==1)n=gensub(/.*<.+>(.+)<.+>.*/,"\\1","g",$0)}/^+/{if(l==1){c=1}}/<\/labels>/{if(l==1 && c==1)print n;l=0;c=0}')
+if [[ -f force-app/main/default/labels/CustomLabels.labels-meta.xml ]]; then
+  while read label; do
+    options=(${options[@]} "CustomLabel:$label")
+  done < <(git diff HEAD -U6 force-app/main/default/labels/CustomLabels.labels-meta.xml | gawk '/<labels>/{l=1}/<fullName>/{if(l==1)n=gensub(/.*<.+>(.+)<.+>.*/,"\\1","g",$0)}/^+/{if(l==1){c=1}}/<\/labels>/{if(l==1 && c==1)print n;l=0;c=0}')
+fi
 
 uniq_options=($(for option in "${options[@]}"; do echo "${option}"; done | sort -u))
 
