@@ -48,6 +48,7 @@ setTargetOrg() {
   fi
 }
 
+[ ! -d force-app ] && echo -e >&2 "\n $(tput setaf 1)'force-app' folder missing$(tput sgr 0)\n" && exit 1
 org=""
 result=$(mktemp)
 names=""
@@ -89,21 +90,29 @@ showresult() {
 }
 
 deployAll() {
-  echo -e "\n $(tput setaf 2)Build Frontend CSS and Site Theme$(tput sgr0) ..."
-  [[ $DEBUG == "1" ]] && echo -e "\n   $(tput setaf 0)(cd frontend && npm run frontend:build)$(tput sgr0)\n"
-  (cd frontend && npm run frontend:build >/dev/null)
-  echo -e "\n $(tput setaf 2)Deploy$(tput sgr0) ..."
-  [[ $DEBUG == "1" ]] && echo -e "\n   $(tput setaf 0)sf project deploy start -x manifest/package.xml --concise -o ${org}$(tput sgr0)\n"
-  sf project deploy start -x manifest/package.xml --concise -o "$org" | tee "$result"
+  if [ -d "frontend" ]; then
+    echo -e "\n $(tput setaf 2)Build Frontend CSS and Site Theme$(tput sgr0) ..."
+    [[ $DEBUG == "1" ]] && echo -e "\n   $(tput setaf 0)(cd frontend && npm run frontend:build)$(tput sgr0)\n"
+    (cd frontend && npm run frontend:build >/dev/null)
+  fi
+  if [ -f manifest/package.xml ]; then
+    [[ $DEBUG == "1" ]] && echo -e "\n   $(tput setaf 0)sf project deploy start -x manifest/package.xml --concise -o ${org}$(tput sgr0)\n"
+    echo -e "\n $(tput setaf 2)Deploy$(tput sgr0) using manifest file ..."
+    sf project deploy start -x manifest/package.xml --concise -o "$org" | tee "$result"
+  else
+    [[ $DEBUG == "1" ]] && echo -e "\n   $(tput setaf 0)sf project deploy start -d force-app --concise -o ${org}$(tput sgr0)\n"
+    echo -e "\n $(tput setaf 2)Deploy$(tput sgr0) using source files in 'force-app/' ..."
+    sf project deploy start -d force-app --concise -o "$org" | tee "$result"
+  fi
   # shellcheck disable=SC2181
   if [[ $? == 0 ]]; then
-    echo -e " $(tput setaf 2)Publish$(tput sgr0) ..."
     declare -a sitenames
     sitenames=("${sitenames[@]}" "$(sf data query -o "$org" -q "SELECT Name FROM Site WHERE SiteType='ChatterNetwork'" --json | jq -r '.result.records[].Name')")
     [[ $DEBUG == "1" ]] && echo
     # shellcheck disable=SC2068
     for sitename in ${sitenames[@]}; do
       [[ $DEBUG == "1" ]] && echo -e "   $(tput setaf 0)sf community publish -n \"${sitename/_/ }\" -o ${org}$(tput sgr0)"
+      echo -e " $(tput setaf 2)Publish$(tput sgr0) ${sitename} ..."
       eval "sf community publish -n \"${sitename/_/ }\" -o ${org} >/dev/null"
       sleep 30
     done
