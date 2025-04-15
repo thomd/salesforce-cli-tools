@@ -108,7 +108,7 @@ deployAll() {
   if [[ $? == 0 ]]; then
     declare -a sitenames
     sitenames=("${sitenames[@]}" "$(sf data query -o "$org" -q "SELECT Name FROM Site WHERE SiteType='ChatterNetwork'" --json | jq -r '.result.records[].Name')")
-    [[ $DEBUG == "1" ]] && echo
+    echo
     # shellcheck disable=SC2068
     for sitename in ${sitenames[@]}; do
       [[ $DEBUG == "1" ]] && echo -e "   $(tput setaf 0)sf community publish -n \"${sitename/_/ }\" -o ${org}$(tput sgr0)"
