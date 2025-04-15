@@ -124,6 +124,7 @@ if [[ ! -f "./manifest/package.xml" ]] && [[ $manifest == true ]]; then
   exit 1
 fi
 
+# create list of metadata object names
 if [[ $name == "" && $manifest == false ]]; then
   name="all"
   [[ $DEBUG == "1" ]] && echo -e "\n   $(tput setaf 0)sf org list metadata-types --json -o ${org} | jq -r '.result.metadataObjects[].xmlName'$(tput sgr0)"
@@ -151,6 +152,7 @@ else
   echo ${name} | tr -d ' ' | tr ',' '\n' > "$names_list"
 fi
 
+# download metadata
 total=$(cat $names_list | wc -l | tr -d ' ')
 c=0
 while read name; do
