@@ -10,8 +10,10 @@
 #
 # EXAMPLES
 #
-#     sf-apex "System.debug('Hello, Salesforce CLI');"
-#     sf-apex "delete[SELECT Id FROM ErrorLog__c];"
+#    sf apex run                                                  # execute Anonymous Apex code in REPL, execute with CTRL+D
+#    sf apex run -f file.apex                                     # execute a local Apex file
+#    sf-apex "System.debug('Hello, Salesforce CLI');"
+#    sf-apex "delete[SELECT Id FROM ErrorLog__c];"
 #
 
 yesno() {
