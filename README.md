@@ -57,7 +57,9 @@ or
 
 1. `sf-tooldata` downloads all data as csv files from an org using the Tooling API.
 
-1. `sf-validate` validate a full project against an org and runs unit tests.
+1. `sf-validate` validates a full project against an org and runs unit tests.
+
+1. `sf-flow` delete inactive flow versions.
 
 ## Some Use Cases
 

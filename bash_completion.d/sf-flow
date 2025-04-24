@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+
+_sfflow_completions() {
+    local cur prev alias flows versions
+    COMPREPLY=()
+    cur="${COMP_WORDS[COMP_CWORD]}"
+    prev="${COMP_WORDS[COMP_CWORD-1]}"
+    flow=""
+
+    local org=$(cat .sf/config.json 2>/dev/null | jq -r '."target-org" | select( . != null )')
+    if [[ -z "$org" ]]; then
+      org=$(cat ~/.sf/config.json 2>/dev/null | jq -r '."target-org" | select( . != null )')
+    fi
+
+    for i in "${!COMP_WORDS[@]}"; do
+      if [[ "${COMP_WORDS[$i]}" = "-o" ]]; then
+        org=${COMP_WORDS[$((i+1))]}
+        break
+      fi
+    done
+
+    for i in "${!COMP_WORDS[@]}"; do
+      if [[ "${COMP_WORDS[$i]}" = "-d" ]]; then
+        flow=${COMP_WORDS[$((i+1))]}
+        break
+      fi
+    done
+
+    names_cache="/tmp/sf-flow.names.${org}"
+
+    COMPREPLY=($(compgen -W "-l --list -d --delete -D --Delete -o --org -s --simple -v --version" -- ${cur}))
+    case "${prev}" in
+        -o|--org)
+            alias=$(cat ~/.sfdx/alias.json | jq -r '.orgs | keys[]')
+            COMPREPLY=($(compgen -W "${alias}" -- ${cur}))
+            return 0
+            ;;
+        -l|--list|-d|--delete|-D|--Delete)
+            if [ ! -s "${names_cache}" ]; then
+              sf data query -q "SELECT DeveloperName FROM FlowDefinition" -t -o ${org} -r json | jq -r '.result.records[].DeveloperName' > ${cache}
+            fi
+            flows=$(cat ${names_cache})
+            COMPREPLY=($(compgen -W "${flows}" -- ${cur}))
+            return 0
+            ;;
+        -v|--version)
+            if [ -n "$flow" ]; then
+              versions=$(sf data query -q "SELECT VersionNumber FROM Flow WHERE DefinitionId IN (SELECT Id FROM FlowDefinition WHERE DeveloperName = '${flow}') AND Status = 'Obsolete'" -t -o ${org} --json | jq '.result.records[].VersionNumber')
+              COMPREPLY=($(compgen -W "${versions}" -- ${cur}))
+            fi
+            return 0
+            ;;
+    esac
+}
+
+complete -o nosort -F _sfflow_completions sf-flow

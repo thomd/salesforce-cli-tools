@@ -1,0 +1,158 @@
+#!/usr/bin/env bash
+
+#
+# Delete inactive flow versions
+#
+# USAGE
+#
+#     sf-flow                               # list all flows
+#     sf-flow -o ORG                        # list all flows on ORG
+#     sf-flow -s                            # list api-name and state of all flows as CSV
+#     sf-flow -l FLOW                       # list all flow versions of flow FLOW
+#     sf-flow -d FLOW                       # delete all obsolete flows
+#     sf-flow -D FLOW                       # delete all obsolete and all draft flows
+#     sf-flow -d FLOW -v VERSION            # delete version VERSION of flow FLOW
+#
+# EXAMPLES
+#
+#     icdiff <(sf-flow -s -o org1) <(sf-flow -s -o org2)          # compare flow states of two orgs
+#     sf-flow -s | vd
+#
+
+
+yesno() {
+  echo ""
+  read -p "$1 [Y/n] " response
+  [[ $response == "n" || $response == "N" ]] && exit 1
+}
+
+print_help() {
+  [[ -n $1 ]] && echo -e >&2 "\n  $(tput setaf 1)${1}$(tput sgr0)\n"
+  awk '/^[^ #]/{c=1}c==0{print $0}' $0 | sed -n '/^#/p' | sed 1d | sed 's/^#/ /g' \
+    | perl -pe "s/ #(.*)$/$(tput setaf 0)\1$(tput sgr 0)/" \
+    | perl -pe "s/(USAGE|EXAMPLES)/$(tput setaf 0)\1$(tput sgr 0)/"
+  exit 1
+}
+
+setTargetOrg() {
+  if [[ -z "$org" ]]; then
+    org=$(cat .sf/config.json 2>/dev/null | jq -r '."target-org" | select( . != null )')
+  fi
+  if [[ -z "$org" ]]; then
+    org=$(cat ~/.sf/config.json 2>/dev/null | jq -r '."target-org" | select( . != null )')
+  fi
+  if [[ -z "$org" ]]; then
+    echo -e >&2 "\n $(tput setaf 1)Missing target org$(tput sgr 0)\n\n   Either provide with $(tput setaf 0)-o$(tput sgr 0) option, or set via $(tput setaf 0)sf config set target-org <org>$(tput sgr 0)"
+    exit 1
+  fi
+}
+
+list=0
+delete=0
+delete_inactive=0
+simple=0
+version=""
+org=""
+flow_api_name=""
+
+while [ $# -gt 0 ]; do
+  case $1 in
+    -l|--list)
+      shift
+      flow_api_name=$1
+      list=1
+      ;;
+    -d|--delete)
+      shift
+      flow_api_name=$1
+      delete=1
+      ;;
+    -D|--Delete)
+      shift
+      flow_api_name=$1
+      delete=1
+      delete_inactive=1
+      ;;
+    -v|--version)
+      shift
+      version=$1
+      ;;
+    -s|--simple)
+      shift
+      simple=1
+      ;;
+    -o|--org)
+      shift
+      org=$1
+      ;;
+    -h|--help)
+      print_help
+      ;;
+    *)
+      ;;
+  esac
+  shift
+done
+setTargetOrg
+
+# list versions of a flow
+if [ "$list" == 1 ]; then
+  [[ $DEBUG == "1" ]] && echo -e "\n $(tput setaf 0)sf data query -q \"SELECT Id, VersionNumber, Status FROM Flow WHERE DefinitionId IN (SELECT Id FROM FlowDefinition WHERE DeveloperName='$flow_api_name') ORDER BY VersionNumber DESC\" -t -o ${org}$(tput sgr0)"
+  echo -e "\n Versions of Flow $(tput setaf 4)${flow_api_name}$(tput sgr0) on $(tput setaf 1)${org}$(tput sgr0):\n"
+  sf data query -q "SELECT Id, VersionNumber, Status FROM Flow WHERE DefinitionId IN (SELECT Id FROM FlowDefinition WHERE DeveloperName='$flow_api_name') ORDER BY VersionNumber DESC" -t -r json -o ${org} \
+  | jq -r '.result.records[] | "\(.VersionNumber) \(.Status)"' \
+  | column -t \
+  | perl -pe 's/Active/\e[0;32m$&\e[0m/g' \
+  | perl -pe 's/Obsolete/\e[0;90m$&\e[0m/g' \
+  | perl -pe 's/InvalidDraft|Draft/\e[0;34m$&\e[0m/g' \
+  | awk '{print " " $0}' \
+  | less
+  exit 0
+fi
+
+# delete flow or flows
+if [ "$delete" == 1 ]; then
+  if [ -z "$version" ]; then
+    if [ $delete_inactive == 0 ]; then
+      condition="AND Status = 'Obsolete'"
+      msg="obsolete"
+    else
+      condition="AND Status != 'Active'"
+      msg="inactive"
+    fi
+    count=$(sf data query -q "SELECT COUNT(Id) FROM Flow WHERE DefinitionId IN (SELECT Id FROM FlowDefinition WHERE DeveloperName='$flow_api_name') ${condition}" -t -r json -o ${org} | jq -r '.result.records[].expr0')
+    [[ $count == 0 ]] && echo -e >&2 "\n  $(tput setaf 1)No obsolete flow $(tput setaf 4)${flow_api_name}$(tput sgr0)\n" && exit 1
+    [[ $DEBUG == "1" ]] && echo -e "\n $(tput setaf 0)sf data query -q \"SELECT Id FROM Flow WHERE DefinitionId IN (SELECT Id FROM FlowDefinition WHERE DeveloperName='$flow_api_name') ${condition}\" -t -o ${org}$(tput sgr0)"
+    yesno " Delete $(tput setaf 4)${count}$(tput sgr0) ${msg} flows from $(tput setaf 4)${flow_api_name}$(tput sgr0) on $(tput setaf 1)${org}$(tput sgr0)?"
+    while read id; do
+      sf data delete record -t -s Flow -i ${id} -o ${org}
+    done < <(sf data query -q "SELECT Id FROM Flow WHERE DefinitionId IN (SELECT Id FROM FlowDefinition WHERE DeveloperName='$flow_api_name') ${condition}" -t -r json -o ${org} | jq -r '.result.records[].Id')
+    exit 0
+  else
+    version_id=$(sf data query -q "SELECT Id FROM Flow WHERE DefinitionId IN (SELECT Id FROM FlowDefinition WHERE DeveloperName='$flow_api_name') AND VersionNumber = ${version}" -t -r json -o ${org} | jq -r '.result.records[].Id')
+    yesno " Delete version $(tput setaf 4)${version}$(tput sgr0) ($(tput setaf 0)${version_id}$(tput sgr0)) of flow $(tput setaf 4)${flow_api_name}$(tput sgr0) from $(tput setaf 1)${org}$(tput sgr0)?"
+    sf data delete record -t -s Flow -i ${version_id} -o ${org}
+    exit 0
+  fi
+fi
+
+# list flow names
+if [ "$delete" == 0 ] && [ "$list" == 0 ]; then
+  if [ "$simple" == 0 ]; then
+    echo -e "\n Unmanaged Flows on $(tput setaf 1)${org}$(tput sgr0):\n"
+    sf data query -q "SELECT ApiName, Label, IsActive, VersionNumber, ActiveVersionId, RecordTriggerType, TriggerObjectOrEventLabel FROM FlowDefinitionView WHERE ManageableState = 'unmanaged'" -r json -o ${org} \
+      | jq -r '.result.records[] | "\(.Label)|\u001b[30m\(.ApiName)\u001b[0m|\(if .IsActive == true then "Active" else "Inactive" end)|\u001b[30m\(.VersionNumber)\u001b[0m|" + (if .RecordTriggerType != null then .RecordTriggerType + " " + .TriggerObjectOrEventLabel else "" end)' \
+      | column -t -s '|' \
+      | perl -pe 's/Active/\e[0;32m$&\e[0m/g' \
+      | perl -pe 's/Inactive/\e[0;31m$&\e[0m/g' \
+      | awk '{print " " $0}' \
+      | less
+  else
+    echo "API Name,Status"
+    sf data query -q "SELECT ApiName, IsActive FROM FlowDefinitionView WHERE ManageableState = 'unmanaged'" -r json -o ${org} \
+      | jq -r '.result.records[] | "\(.ApiName),\(if .IsActive == true then "Active" else "Inactive" end)"' \
+      | sort
+  fi
+fi
+
+exit 0
