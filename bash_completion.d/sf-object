@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 
-_sfinspect_completions() {
+_sfobject_completions() {
     local cur prev alias
     COMPREPLY=()
     cur="${COMP_WORDS[COMP_CWORD]}"
     prev="${COMP_WORDS[COMP_CWORD-1]}"
 
-    COMPREPLY=($(compgen -W "labels permissions -h -d" -- ${cur}))
+    COMPREPLY=($(compgen -W "-h -k --key" -- ${cur}))
 }
 
-complete -F _sfinspect_completions sf-inspect
+complete -F _sfobject_completions sf-object
 

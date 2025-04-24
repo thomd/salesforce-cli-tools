@@ -61,6 +61,8 @@ or
 
 1. `sf-flow` delete inactive flow versions.
 
+1. `sf-object` resolves sObject key-prefix to sObject name.
+
 ## Some Use Cases
 
 ### Compare Data between Orgs
