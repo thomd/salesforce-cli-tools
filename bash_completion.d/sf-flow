@@ -37,7 +37,7 @@ _sfflow_completions() {
             ;;
         -l|--list|-d|--delete|-D|--Delete)
             if [ ! -s "${names_cache}" ]; then
-              sf data query -q "SELECT DeveloperName FROM FlowDefinition" -t -o ${org} -r json | jq -r '.result.records[].DeveloperName' > ${cache}
+              sf data query -q "SELECT DeveloperName FROM FlowDefinition" -t -o ${org} -r json | jq -r '.result.records[].DeveloperName' > ${names_cache}
             fi
             flows=$(cat ${names_cache})
             COMPREPLY=($(compgen -W "${flows}" -- ${cur}))
