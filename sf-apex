@@ -64,6 +64,7 @@ while [ $# -gt 0 ]; do
   shift
 done
 setTargetOrg
+[[ "$org" == "mediverse" ]] && echo -e >&2 "\n $(tput setaf 1)DO NOT RUN ON PRODUCTION!$(tput sgr 0)" && exit 1
 
 if [ "${code}" ]; then
   [[ $DEBUG == "1" ]] && echo -e "\n   $(tput setaf 0)sf apex run -f ${codefile} -o ${org}$(tput sgr0)\n"
