@@ -5,13 +5,17 @@
 #
 # USAGE
 #
-#    sf-data                                  # download all data
-#    sf-data -o ORG                           # download from ORG
-#    sf-data -d DIR                           # save data in DIR folder [default: .data]
-#    sf-data -s OBJECT_1 -s OBJECT_2          # download OBJECT_1 and OBJECT_2
-#    sf-data -v OBJECT                        # download OBJECT and open in Visidata
-#    sf-data -r                               # refresh data in current directory
-#    sf-data -l                               # only fetch objects that contained data during the last run
+#    sf-data                                         # download all data
+#    sf-data -o ORG                                  # download from ORG
+#    sf-data -d DIR                                  # save data in DIR folder [default: .data]
+#    sf-data -s OBJECT_1 -s OBJECT_2                 # download OBJECT_1 and OBJECT_2
+#    sf-data -v OBJECT                               # download OBJECT and open in Visidata
+#
+#    sf-data -g                                      # list groups
+#    sf-data -s OBJECT_1 -s OBJECT_2 -g GROUP        # download OBJECT_1 and OBJECT_2 and store object names in group GROUP
+#    sf-data -g GROUP                                # download objects of group GROUP
+#    sf-data -G                                      # delete all groups
+#    sf-data -G group                                # delete group GROUP
 #
 # EXAMPLES
 #
@@ -32,7 +36,7 @@
 
 yesno() {
   echo ""
-  read -r -p "$1 [Y/n] " response
+  read -r -p " $1 [Y/n] " response
   [[ $response == "n" || $response == "N" ]] && exit 1
 }
 
@@ -42,6 +46,11 @@ show_help() {
     | perl -pe "s/ #(.*)$/$(tput setaf 0)\1$(tput sgr 0)/" \
     | perl -pe "s/(USAGE|EXAMPLES|COMMANDS)/$(tput setaf 0)\1$(tput sgr 0)/" \
     | perl -pe "s/\`(.+)\`/$(tput sgr 0 1)\1$(tput sgr 0)/"
+  exit 1
+}
+
+error_and_exit() {
+  echo -e >&2 "\n $(tput setaf 1)$@$(tput sgr0)\n"
   exit 1
 }
 
@@ -61,11 +70,13 @@ setTargetOrg() {
 org=""
 target=".data"
 object=""
-visidata=false
+visidata=0
 listfile=$(mktemp)
-refresh=false
-last=false
-lastfile="/tmp/sf-data.lastobjects"
+group_name=""
+list_groups=0
+delete_group=0
+group_folder="/tmp/sf-data.groups"
+mkdir -p $group_folder
 
 while [ $# -gt 0 ]; do
   case $1 in
@@ -73,15 +84,19 @@ while [ $# -gt 0 ]; do
       shift
       org=$1
       ;;
+    -g|--group)
+      shift
+      [ -z "$1" ] && list_groups=1
+      group_name=$1
+      ;;
+    -G|--delete-group)
+      shift
+      delete_group=1
+      group_name=$1
+      ;;
     -d|--destination)
       shift
       target=$1
-      ;;
-    -l|--last)
-      last=true
-      ;;
-    -r|--refresh)
-      refresh=true
       ;;
     -s|--sobject)
       shift
@@ -94,7 +109,7 @@ while [ $# -gt 0 ]; do
     -v|--visidata)
       shift
       object=$1
-      visidata=true
+      visidata=1
       ;;
     -h|--help)
       show_help
@@ -106,25 +121,62 @@ while [ $# -gt 0 ]; do
 done
 setTargetOrg
 
-if [ $refresh == true ]; then
-  object=$(fd . ${target} -e csv -x echo {/.} | tr '\n' ',')
-  if [[ ${object} == "" ]];then
-    echo -e >&2 "\n Folder $(tput setaf 4)${target}$(tput sgr 0) is empty"
-    exit 1
-  fi
-  object=${object::-1}
+[ "$DEBUG" == "2" ] && echo -e "\norg: "$org"\ntarget: "$target"\nobject: "$object"\nvisidata: "$visidata"\ngroup_name: "$group_name"\nlist_groups: "$list_groups"\ndelete_group: "$delete_group"\n" | column -t && exit 0
+
+# sf-data -g
+if [ -z "$object" ] && [ "$list_groups" == "1" ]; then
+  echo -e "\n $(tput setaf 2)Object Groupes$(tput sgr0)\n"
+  while read -r group; do
+    echo -e "   $group"
+  done < <(ls "$group_folder")
+  exit 0
 fi
 
-objects=$(echo ${object} | perl -pe "s/,/, /g" | perl -pe "s/(\w+)/$(tput setaf 4)\1$(tput sgr0)/g")
-if [[ $object == "" ]] && [[ $last == "false" ]]; then
-  yesno " Fetch $(tput setaf 4)all$(tput sgr0) data from $(tput setaf 1)${org}$(tput sgr0) ?"
-elif [[ $object == "" ]] && [[ $last == "true" ]]; then
-  yesno " Fetch $(tput setaf 4)all$(tput sgr0) data of $(tput setaf 4)last run$(tput sgr0) from $(tput setaf 1)${org}$(tput sgr0) ?"
-else
-  yesno " Fetch ${objects} data from $(tput setaf 1)${org}$(tput sgr0) ?"
+# sf-data -G
+if [ "$delete_group" == "1" ] && [ -z "$group_name" ]; then
+  yesno "Delete $(tput setaf 4)all$(tput sgr0) groups ?"
+  rm -r "${group_folder}"
+  exit 0
 fi
 
-if [ $visidata == true ]; then
+# sf-data -G NAME
+if [ "$delete_group" == "1" ] && [ -n "$group_name" ]; then
+  yesno "Delete group $(tput setaf 4)${group_name}$(tput sgr0) ?"
+  [ ! -f "${group_folder}/${group_name}" ] && error_and_exit "Group does not exist"
+  rm "${group_folder}/${group_name}"
+  exit 0
+fi
+
+# sf-data
+if [ -z "$object" ] && [ "$list_groups" == "0" ] && [ -z "$group_name" ]; then
+  [ "$DEBUG" == "1" ] && echo -e "   $(tput setaf 0)sf sobject list -o ${org} -s all$(tput sgr0)"
+  sf sobject list -o ${org} -s all > "$listfile"
+  yesno "Fetch $(tput setaf 4)all$(tput sgr0) data from $(tput setaf 1)${org}$(tput sgr0) ?"
+fi
+
+# sf-data -g GROUP
+if [ -z "$object" ] && [ "$list_groups" == "0" ] && [ -n "$group_name" ]; then
+  [ ! -f "${group_folder}/${group_name}" ] && error_and_exit "Group does not exist"
+  cat "${group_folder}/${group_name}" > "$listfile"
+  yesno "Fetch $(cat "${group_folder}/${group_name}" | perl -pe 's/\n/, /g' | perl -pe 's/, $//' | perl -pe "s/(\w+)/$(tput setaf 4)\1$(tput sgr0)/g") data from $(tput setaf 1)${org}$(tput sgr0) ?"
+fi
+
+# sf-data -s OBJECT
+if [ -n "$object" ] && [ "$list_groups" == "0" ] && [ -z "$group_name" ]; then
+  echo "$object" | tr -d ' ' | tr ',' '\n' > "$listfile"
+  yesno "Fetch $(echo ${object} | perl -pe "s/,/, /g" | perl -pe "s/(\w+)/$(tput setaf 4)\1$(tput sgr0)/g") data from $(tput setaf 1)${org}$(tput sgr0) ?"
+fi
+
+# sf-data -s OBJECT -g GROUP
+if [ -n "$object" ] && [ "$list_groups" == "0" ] && [ -n "$group_name" ]; then
+  echo "$object" | tr -d ' ' | tr ',' '\n' > "$listfile"
+  cat "$listfile" > "${group_folder}/${group_name}"
+  yesno "Fetch $(echo ${object} | perl -pe "s/,/, /g" | perl -pe "s/(\w+)/$(tput setaf 4)\1$(tput sgr0)/g") data from $(tput setaf 1)${org}$(tput sgr0) ?"
+fi
+
+[ "$DEBUG" == "1" ] && echo -e "\n   $(tput setaf 0)${listfile}$(tput sgr0)\n"
+
+if [ "$visidata" == "1" ]; then
   echo ""
   target=$(mktemp)
   [[ $DEBUG == "1" ]] && echo -e "   $(tput setaf 0)sf data query -q \"SELECT `sf sobject describe -o ${org} -s ${object} | jq -r '.fields[].name' | paste -sd, -` FROM ${object}\" -o ${org}$(tput sgr0)\n"
@@ -133,21 +185,10 @@ if [ $visidata == true ]; then
   exit 0
 fi
 
-# this is an opinionated list of sobjects which are either not of interest or do not support queries
-if [[ $object == "" ]] && [[ $last == "false" ]]; then
-  sf sobject list -o "$org" -s all > "$listfile"
-elif [[ $object == "" ]] && [[ $last == "true" ]]; then
-  cat "$lastfile" > "$listfile"
-else
-  echo "$object" | tr -d ' ' | tr ',' '\n' > "$listfile"
-fi
-[[ $DEBUG == "1" ]] && echo -e "   $(tput setaf 0)${listfile}$(tput sgr0)\n"
-
-total=$(cat "$listfile" | wc -l | tr -d ' ')
 mkdir -p ${target}
+total=$(cat "$listfile" | wc -l | tr -d ' ')
 c=0
 startTime=$(date +%s)
-:> $lastfile
 
 while read obj; do
   c=$((c+1))
@@ -171,7 +212,6 @@ while read obj; do
     else
       echo -e " ${target}/${obj}: $(tput setaf 2)${dataSize} records$(tput sgr0)"
     fi
-    echo "$obj" >> "$lastfile"
   fi
   find ${target}/${obj}.csv -type f -size -2c -delete
 done < <(cat "$listfile")

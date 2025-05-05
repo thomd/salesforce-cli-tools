@@ -1,16 +1,22 @@
 #!/usr/bin/env bash
 
 _sfdata_completions() {
-    local cur prev names alias
+    local cur prev names alias groups
     cache="/tmp/sf-data.objects"
     cur="${COMP_WORDS[COMP_CWORD]}"
     prev="${COMP_WORDS[COMP_CWORD-1]}"
+    group_folder="/tmp/sf-data.groups"
 
-    COMPREPLY=($(compgen -W "-o --org -d --destination -s --sobject -v --visidata -l --last -r --refrash -h --help" -- ${cur}))
+    COMPREPLY=($(compgen -W "-o --org -d --destination -s --sobject -v --visidata -g --group -G --delete-group -h --help" -- ${cur}))
     case "${prev}" in
         -o|--org)
             alias=$(cat ~/.sfdx/alias.json | jq -r '.orgs | keys[]')
             COMPREPLY=($(compgen -W "${alias}" -- ${cur}))
+            return 0
+            ;;
+        -g|--group|-G|--delete-group)
+            groups=$(ls -1 "$group_folder")
+            COMPREPLY=($(compgen -W "${groups}" -- ${cur}))
             return 0
             ;;
         -s|--sobject|-v|--visidata)
