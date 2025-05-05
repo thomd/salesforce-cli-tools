@@ -150,8 +150,8 @@ fi
 # sf-data
 if [ -z "$object" ] && [ "$list_groups" == "0" ] && [ -z "$group_name" ]; then
   [ "$DEBUG" == "1" ] && echo -e "   $(tput setaf 0)sf sobject list -o ${org} -s all$(tput sgr0)"
-  sf sobject list -o ${org} -s all > "$listfile"
   yesno "Fetch $(tput setaf 4)all$(tput sgr0) data from $(tput setaf 1)${org}$(tput sgr0) ?"
+  sf sobject list -o ${org} -s all > "$listfile"
 fi
 
 # sf-data -g GROUP
@@ -179,7 +179,7 @@ fi
 if [ "$visidata" == "1" ]; then
   echo ""
   target=$(mktemp)
-  [[ $DEBUG == "1" ]] && echo -e "   $(tput setaf 0)sf data query -q \"SELECT `sf sobject describe -o ${org} -s ${object} | jq -r '.fields[].name' | paste -sd, -` FROM ${object}\" -o ${org}$(tput sgr0)\n"
+  [ "$DEBUG" == "1" ] && echo -e "   $(tput setaf 0)sf data query -q \"SELECT `sf sobject describe -o ${org} -s ${object} | jq -r '.fields[].name' | paste -sd, -` FROM ${object}\" -o ${org}$(tput sgr0)\n"
   sf data query -q "SELECT `sf sobject describe -o ${org} -s ${object} | jq -r '.fields[].name' | paste -sd, -` FROM ${object}" -o ${org} -r csv > "${target}"
   vd "${target}"
   exit 0
@@ -201,7 +201,7 @@ while read obj; do
     | sed /LastReferencedDate/d \
     | sed /MV_DaysSinceCreated__c/d \
     | paste -sd, -)
-  [[ $DEBUG == "1" ]] && echo -e "\n   $(tput setaf 0)sf data query -q \"SELECT ${fields} FROM ${obj}\" -o ${org} -r csv$(tput sgr0)\n"
+  [ "$DEBUG" == "1" ] && echo -e "\n   $(tput setaf 0)sf data query -q \"SELECT ${fields} FROM ${obj}\" -o ${org} -r csv$(tput sgr0)\n"
   sf data query -q "SELECT ${fields} FROM ${obj}" -o ${org} -r csv 2> /dev/null > ${target}/${obj}.csv
   dataSize=$(csvtk nrow ${target}/${obj}.csv)
   if [ $dataSize == '0' ]; then
