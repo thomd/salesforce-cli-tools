@@ -26,6 +26,9 @@ mapOption() {
     documents*)
       option="Document:$(echo $1 | perl -pe 's#documents/(.+?)\..+#\1#')"
       ;;
+    duplicateRules*)
+      option="DuplicateRule:$(echo $1 | perl -pe 's#duplicateRules/(.+?\..+?)\..+#\1#')"
+      ;;
     email*)
       option="EmailTemplate:$(echo $1 | perl -pe 's#email/(.+?)\..+#\1#')"
       ;;
@@ -50,6 +53,9 @@ mapOption() {
       ;;
     lwc*)
       option="LightningComponentBundle:$(echo $1 | perl -pe 's#lwc/(.+?)/.+#\1#')"
+      ;;
+    matchingRules*)
+      option="MatchingRules:$(echo $1 | perl -pe 's#matchingRules/(.+?)\..+#\1#')"
       ;;
     namedCredentials*)
       option="NamedCredential:$(echo $1 | perl -pe 's#namedCredentials/(.+?)\..+#\1#')"
