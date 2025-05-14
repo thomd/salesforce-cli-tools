@@ -1,19 +1,20 @@
 #!/usr/bin/env bash
 
 #
-# Execute inline APEX code
+# Execute inline Apex code
 #
 # USAGE
 #
-#    sf-apex "CODE"                           # execute CODE
-#    sf-apex -o ORG                           # execute Apex Code on ORG
+#    sf-apex "CODE"                                        # execute CODE
+#    sf-apex -o ORG                                        # execute Apex code on ORG
 #
 # EXAMPLES
 #
-#    sf apex run                                                  # execute Anonymous Apex code in REPL, execute with CTRL+D
-#    sf apex run -f file.apex                                     # execute a local Apex file
-#    sf-apex "System.debug('Hello, Salesforce CLI');"
-#    sf-apex "delete[SELECT Id FROM ErrorLog__c];"
+#    sf-apex "delete[SELECT Id FROM EMyObject__c];"
+#    sf-apex "Logger.info('foobar');Logger.saveLog();"
+#
+#    sf apex run                                           # execute Anonymous Apex code in REPL, execute with CTRL+D
+#    sf apex run -f file.apex                              # execute a local Apex file
 #
 
 yesno() {
@@ -24,10 +25,16 @@ yesno() {
 
 show_help() {
   # shellcheck disable=SC2086
+  [ -n "$1" ] && echo -e >&2 "\n  $(tput setaf 1)${1}$(tput sgr0)\n"
   awk '/^[^ #]/{c=1}c==0{print $0}' $0 | sed -n '/^#/p' | sed 1d | sed 's/^#/ /g' \
     | perl -pe "s/ #(.*)$/$(tput setaf 0)\1$(tput sgr 0)/" \
     | perl -pe "s/(USAGE|EXAMPLES|COMMANDS)/$(tput setaf 0)\1$(tput sgr 0)/" \
     | perl -pe "s/\`(.+)\`/$(tput sgr 0 1)\1$(tput sgr 0)/"
+  exit 1
+}
+
+print_error_and_exit() {
+  [ -n "$1" ] && echo -e >&2 "\n  $(tput setaf 1)${1}$(tput sgr0)\n"
   exit 1
 }
 
@@ -64,12 +71,13 @@ while [ $# -gt 0 ]; do
   shift
 done
 setTargetOrg
-[[ "$org" == "production" ]] && echo -e >&2 "\n $(tput setaf 1)DO NOT RUN ON PRODUCTION!$(tput sgr 0)" && exit 1
+[ "$org" == "production" ] && print_error_and_exit "DO NOT RUN ON PRODUCTION!"
 
-if [ "${code}" ]; then
-  [[ $DEBUG == "1" ]] && echo -e "\n   $(tput setaf 0)sf apex run -f ${codefile} -o ${org}$(tput sgr0)\n"
-  yesno " Execute Apex code $(tput setaf 0)${code}$(tput sgr0) on $(tput setaf 1)${org}$(tput sgr0) ?"
-  echo "${code}" > "$codefile"
-  sf apex run -f "$codefile" -o "$org" >/dev/null
-  exit 0
-fi
+[ -z "$code" ] && show_help "Apex code missing"
+
+[ "$DEBUG" == "1" ] && echo -e "\n   $(tput setaf 0)sf apex run -f ${codefile} -o ${org}$(tput sgr0)\n"
+yesno " Execute Apex code $(tput setaf 0)${code}$(tput sgr0) on $(tput setaf 1)${org}$(tput sgr0) ?"
+echo "${code}" > "$codefile"
+sf apex run -f "$codefile" -o "$org" >/dev/null
+exit 0
+
