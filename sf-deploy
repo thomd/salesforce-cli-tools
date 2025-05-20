@@ -35,6 +35,11 @@ show_help() {
   exit 1
 }
 
+print_error_and_exit() {
+  [[ -n $1 ]] && echo -e >&2 "\n  $(tput setaf 1)${1}$(tput sgr0)\n"
+  exit 1
+}
+
 setTargetOrg() {
   if [[ -z "$org" ]]; then
     org=$(jq -r '."target-org" | select( . != null )' .sf/config.json 2>/dev/null)
@@ -80,6 +85,9 @@ while [ $# -gt 0 ]; do
   shift
 done
 setTargetOrg
+
+[ "$org" == "production" ] && print_error_and_exit "DO NOT DEPLOY TO PRODUCTION! Use Pipeline instead."
+
 
 showresult() {
   sed 1,2d "$result" | perl -pe "s/(Component Failures \[\d+\])$/ $(tput setaf 1)\1$(tput sgr 0)/" | cut -c -"$(tput cols)"
@@ -127,7 +135,7 @@ deployAll() {
 if [[ ! $names == "" ]]; then
   yesno " Deploy Metadata $(echo "$names" | perl -pe "s/ -m/,/g" | perl -pe "s/(\w+)/$(tput setaf 4)\1$(tput sgr0)/g") to $(tput setaf 1)${org}$(tput sgr0)?"
   echo
-  [[ $DEBUG == "1" ]] && echo -e "   $(tput setaf 0)sf project deploy start --concise -o ${org} -m ${names}$(tput sgr0)\n"
+  [ "$DEBUG" == "1" ] && echo -e "   $(tput setaf 0)sf project deploy start --concise -o ${org} -m ${names}$(tput sgr0)\n"
   eval "sf project deploy start -o ${org} -m ${names} --concise"
 elif [[ $(git diff HEAD --name-only | wc -l | tr -d ' ') == 0 || $all == true ]]; then
   yesno " Build, Deploy and Publish to $(tput setaf 1)${org}$(tput sgr0)?"
