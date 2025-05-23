@@ -10,7 +10,7 @@
 #
 # EXAMPLES
 #
-#    sf-apex "delete[SELECT Id FROM EMyObject__c];"
+#    sf-apex "delete[SELECT Id FROM MyObject__c];"
 #    sf-apex "Logger.info('foobar');Logger.saveLog();"
 #
 #    sf apex run                                           # execute Anonymous Apex code in REPL, execute with CTRL+D
