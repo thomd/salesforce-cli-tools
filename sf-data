@@ -125,9 +125,10 @@ setTargetOrg
 
 # sf-data -g
 if [ -z "$object" ] && [ "$list_groups" == "1" ]; then
-  echo -e "\n $(tput setaf 2)Object Groupes$(tput sgr0) in $(tput setaf 0)${group_folder}$(tput sgr0):\n"
+  echo -e "\n $(tput setaf 2)Object Groupes$(tput sgr0) in $(tput setaf 0)${group_folder}/$(tput sgr0) folder:"
   while read -r group; do
-    echo -e "   $group"
+    echo -e "\n   $(tput setaf 2)${group}$(tput sgr0)"
+    cat -n "$group_folder/$group"
   done < <(ls "$group_folder")
   exit 0
 fi
