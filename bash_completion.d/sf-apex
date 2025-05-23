@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+
+_sfapex_completions() {
+    local cur prev alias
+    COMPREPLY=()
+    cur="${COMP_WORDS[COMP_CWORD]}"
+    prev="${COMP_WORDS[COMP_CWORD-1]}"
+
+    COMPREPLY=($(compgen -W "-o --org -h --help" -- ${cur}))
+    case "${prev}" in
+        -o|--org)
+            alias=$(cat ~/.sfdx/alias.json | jq -r '.orgs | keys[]')
+            COMPREPLY=($(compgen -W "${alias}" -- ${cur}))
+            return 0
+            ;;
+    esac
+}
+
+complete -o nosort -F _sfapex_completions sf-apex
