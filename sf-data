@@ -13,7 +13,7 @@
 #
 #    sf-data -g                                      # list groups
 #    sf-data -s OBJECT_1 -s OBJECT_2 -g GROUP        # download OBJECT_1 and OBJECT_2 and store object names in group GROUP
-#    sf-data -g GROUP                                # download objects of group GROUP
+#    sf-data -g GROUP_1 -g GROUP_2                   # download objects of group GROUP_1 and GROUP_2
 #    sf-data -G                                      # delete all groups
 #    sf-data -G group                                # delete group GROUP
 #
@@ -72,7 +72,7 @@ target=".data"
 object=""
 visidata=0
 listfile=$(mktemp)
-group_name=""
+group_names=""
 list_groups=0
 delete_group=0
 group_folder="/tmp/sf-data.groups"
@@ -86,13 +86,20 @@ while [ $# -gt 0 ]; do
       ;;
     -g|--group)
       shift
-      [ -z "$1" ] && list_groups=1
-      group_name=$1
+      if [ -z "$1" ]; then
+        [ "$group_names" == "" ] && list_groups=1
+      else
+        if [ "$group_names" == "" ]; then
+          group_names=$1
+        else
+          group_names="${group_names},${1}"
+        fi
+      fi
       ;;
     -G|--delete-group)
       shift
       delete_group=1
-      group_name=$1
+      group_names=$1
       ;;
     -d|--destination)
       shift
@@ -100,7 +107,7 @@ while [ $# -gt 0 ]; do
       ;;
     -s|--sobject)
       shift
-      if [[ $object == "" ]]; then
+      if [ "$object" == "" ]; then
         object=$1
       else
         object="${object},${1}"
@@ -121,7 +128,7 @@ while [ $# -gt 0 ]; do
 done
 setTargetOrg
 
-[ "$DEBUG" == "2" ] && echo -e "\norg: "$org"\ntarget: "$target"\nobject: "$object"\nvisidata: "$visidata"\ngroup_name: "$group_name"\nlist_groups: "$list_groups"\ndelete_group: "$delete_group"\n" | column -t && exit 0
+[ "$DEBUG" == "2" ] && echo -e "\norg: "$org"\ntarget: "$target"\nobject: "$object"\nvisidata: "$visidata"\ngroup_names: "$group_names"\nlist_groups: "$list_groups"\ndelete_group: "$delete_group"\n" | column -t && exit 0
 
 # sf-data -g
 if [ -z "$object" ] && [ "$list_groups" == "1" ]; then
@@ -134,44 +141,46 @@ if [ -z "$object" ] && [ "$list_groups" == "1" ]; then
 fi
 
 # sf-data -G
-if [ "$delete_group" == "1" ] && [ -z "$group_name" ]; then
+if [ "$delete_group" == "1" ] && [ -z "$group_names" ]; then
   yesno "Delete $(tput setaf 4)all$(tput sgr0) groups ?"
   rm -r "${group_folder}"
   exit 0
 fi
 
 # sf-data -G NAME
-if [ "$delete_group" == "1" ] && [ -n "$group_name" ]; then
-  yesno "Delete group $(tput setaf 4)${group_name}$(tput sgr0) ?"
-  [ ! -f "${group_folder}/${group_name}" ] && error_and_exit "Group does not exist"
-  rm "${group_folder}/${group_name}"
+if [ "$delete_group" == "1" ] && [ -n "$group_names" ]; then
+  yesno "Delete group $(tput setaf 4)${group_names}$(tput sgr0) ?"
+  [ ! -f "${group_folder}/${group_names}" ] && error_and_exit "Group '${group_names}' does not exist"
+  rm "${group_folder}/${group_names}"
   exit 0
 fi
 
 # sf-data
-if [ -z "$object" ] && [ "$list_groups" == "0" ] && [ -z "$group_name" ]; then
+if [ -z "$object" ] && [ "$list_groups" == "0" ] && [ -z "$group_names" ]; then
   [ "$DEBUG" == "1" ] && echo -e "   $(tput setaf 0)sf sobject list -o ${org} -s all$(tput sgr0)"
   yesno "Fetch $(tput setaf 4)all$(tput sgr0) data from $(tput setaf 1)${org}$(tput sgr0) ?"
   sf sobject list -o ${org} -s all > "$listfile"
 fi
 
 # sf-data -g GROUP
-if [ -z "$object" ] && [ "$list_groups" == "0" ] && [ -n "$group_name" ]; then
-  [ ! -f "${group_folder}/${group_name}" ] && error_and_exit "Group does not exist"
-  cat "${group_folder}/${group_name}" > "$listfile"
-  yesno "Fetch $(cat "${group_folder}/${group_name}" | perl -pe 's/\n/, /g' | perl -pe 's/, $//' | perl -pe "s/(\w+)/$(tput setaf 4)\1$(tput sgr0)/g") data from $(tput setaf 1)${org}$(tput sgr0) ?"
+if [ -z "$object" ] && [ "$list_groups" == "0" ] && [ -n "$group_names" ]; then
+  while read -r group; do
+    [ ! -f "${group_folder}/${group}" ] && error_and_exit "Group '${group}' does not exist"
+    cat "${group_folder}/${group}" >> "$listfile"
+  done < <(echo "$group_names" | tr -d ' ' | tr ',' '\n')
+  yesno "Fetch $(cat "$listfile" | perl -pe 's/\n/, /g' | perl -pe 's/, $//' | perl -pe "s/(\w+)/$(tput setaf 4)\1$(tput sgr0)/g") data from $(tput setaf 1)${org}$(tput sgr0) ?"
 fi
 
 # sf-data -s OBJECT
-if [ -n "$object" ] && [ "$list_groups" == "0" ] && [ -z "$group_name" ]; then
+if [ -n "$object" ] && [ "$list_groups" == "0" ] && [ -z "$group_names" ]; then
   echo "$object" | tr -d ' ' | tr ',' '\n' > "$listfile"
   yesno "Fetch $(echo ${object} | perl -pe "s/,/, /g" | perl -pe "s/(\w+)/$(tput setaf 4)\1$(tput sgr0)/g") data from $(tput setaf 1)${org}$(tput sgr0) ?"
 fi
 
 # sf-data -s OBJECT -g GROUP
-if [ -n "$object" ] && [ "$list_groups" == "0" ] && [ -n "$group_name" ]; then
+if [ -n "$object" ] && [ "$list_groups" == "0" ] && [ -n "$group_names" ]; then
   echo "$object" | tr -d ' ' | tr ',' '\n' > "$listfile"
-  cat "$listfile" > "${group_folder}/${group_name}"
+  cat "$listfile" > "${group_folder}/${group_names}"
   yesno "Fetch $(echo ${object} | perl -pe "s/,/, /g" | perl -pe "s/(\w+)/$(tput setaf 4)\1$(tput sgr0)/g") data from $(tput setaf 1)${org}$(tput sgr0) ?"
 fi
 
