@@ -75,7 +75,7 @@ listfile=$(mktemp)
 group_names=""
 list_groups=0
 delete_group=0
-group_folder="/tmp/sf-data.groups"
+group_folder="$HOME/.config/sf-data/groups"
 mkdir -p $group_folder
 
 while [ $# -gt 0 ]; do

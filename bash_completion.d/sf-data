@@ -5,7 +5,7 @@ _sfdata_completions() {
     cache="/tmp/sf-data.objects"
     cur="${COMP_WORDS[COMP_CWORD]}"
     prev="${COMP_WORDS[COMP_CWORD-1]}"
-    group_folder="/tmp/sf-data.groups"
+    group_folder="$HOME/.config/sf-data/groups"
 
     COMPREPLY=($(compgen -W "-o --org -d --destination -s --sobject -v --visidata -g --group -G --delete-group -h --help" -- ${cur}))
     case "${prev}" in
