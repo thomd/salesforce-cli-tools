@@ -6,8 +6,8 @@
 # USAGE
 #
 #     sf-validate                  # validate deployment with unit tests
-#     sf-validate -o ORG           # validate deployment with unit tests on ORG
 #     sf-validate -n               # validate deployment without unit tests
+#     sf-validate -o ORG           # validate deployment with unit tests on ORG
 #
 # COMMANDS
 #
@@ -19,7 +19,7 @@
 
 yesno() {
   echo ""
-  read -p "$1 [Y/n] " response
+  read -p " $1 [Y/n] " response
   [[ $response == "n" || $response == "N" ]] && exit 1
 }
 
@@ -44,9 +44,20 @@ setTargetOrg() {
   fi
 }
 
+install-sf-plugin-if-missing() {
+  local plugin=$1
+  sf plugins | rg "$plugin" > /dev/null
+  if [ "$?" == 1 ]; then
+    allowFile="$HOME/.config/sf/unsignedPluginAllowList.json"
+    [ ! -e "$allowFile" ] && echo "[]" > "$allowFile"
+    tempFile=$(mktemp)
+    cat "$allowFile" | jq "if index(\"${plugin}\") | not then . += [\"${plugin}\"] else . end" > "$tempFile" && mv "$tempFile" "$allowFile"
+    sf plugins install "$plugin" >/dev/null 2>&1
+  fi
+}
+
 org=""
-unittests=true
-result=$(mktemp)
+unittests=1
 
 while [ $# -gt 0 ]; do
   case $1 in
@@ -55,7 +66,7 @@ while [ $# -gt 0 ]; do
       org=$1
       ;;
     -n)
-      unittests=false
+      unittests=0
       ;;
     -h|--help)
       show_help
@@ -67,24 +78,17 @@ while [ $# -gt 0 ]; do
 done
 setTargetOrg
 
-showresult() {
-  tail -n 9 ${result} | perl -pe "s/(Successfully validated the deployment)/ $(tput setaf 2)\1$(tput sgr 0)/" | cut -c -$(tput cols)
-  deployid=$(cat ${result} | grep "Deploy ID" | perl -pe 's/Deploy ID: (.*)/\1/')
-  orgname=$(sf data query -q "SELECT Domain FROM Domain WHERE HttpsOption = 'CommunityAlt'" --json | jq -r '.result.records[].Domain' | perl -pe 's/(.+)--.+/\1/')
-  deployurl="https://${orgname}--${1}.sandbox.lightning.force.com/lightning/setup/DeployStatus/page?address=/changemgmt/monitorDeploymentsDetails.apexp?asyncId=${deployid}"
-  echo -e "\n $(tput setaf 4)Deployment Status:$(tput sgr0)\n  ${deployurl}"
-}
-
-if [ $unittests == true ]; then
-  yesno " Validate and run Unit Tests on $(tput setaf 1)${org}$(tput sgr0) ?"
-  echo -e "\n $(tput setaf 2)Validate and run Unit Tests$(tput sgr0) ..."
-  [[ $DEBUG == "1" ]] && echo -e "\n   $(tput setaf 0)sf project deploy validate -x manifest/package.xml -o ${org} -l RunSpecifiedTests [-t ...] $(tput sgr0)\n"
-  sf project deploy validate -x manifest/package.xml -l RunSpecifiedTests $(awk '{ printf(" -t %s", $0) }' scripts/test/unit-test-list.txt) -o ${org} > ${result}
+if [ "$unittests" == 1 ]; then
+  install-sf-plugin-if-missing "apextestlist"
+  yesno "Validate and run Unit Tests on $(tput setaf 1)${org}$(tput sgr0) ?"
+  echo -e "\n $(tput setaf 2)Validate and run Unit Tests$(tput sgr0) ...\n"
+  [ "$DEBUG" == "1" ] && echo -e "\n   $(tput setaf 0)sf project deploy validate -x manifest/package.xml -l RunSpecifiedTests \$(sf apextests list --ignore-missing-tests --no-warnings) --concise$(tput sgr0)\n"
+  sf project deploy validate -x manifest/package.xml -l RunSpecifiedTests $(sf apextests list --ignore-missing-tests --no-warnings) --concise -o ${org}
 else
   yesno " Validate on $(tput setaf 1)${org}$(tput sgr0) ?"
   echo -e "\n $(tput setaf 2)Validate$(tput sgr0) ..."
-  [[ $DEBUG == "1" ]] && echo -e "\n   $(tput setaf 0)sf project deploy start -x manifest/package.xml -l NoTestRun --dry-run -o ${org}$(tput sgr0)\n"
-  sf project deploy start -x manifest/package.xml -l NoTestRun --dry-run -o ${org} > ${result}
+  [ "$DEBUG" == "1" ] && echo -e "\n   $(tput setaf 0)sf project deploy start -x manifest/package.xml -l NoTestRun --dry-run -o ${org}$(tput sgr0)\n"
+  sf project deploy start -x manifest/package.xml -l NoTestRun --dry-run --concise -o ${org}
 fi
-showresult ${org}
 
+exit 0
