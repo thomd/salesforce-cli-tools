@@ -6,7 +6,7 @@ _sfinspect_completions() {
     cur="${COMP_WORDS[COMP_CWORD]}"
     prev="${COMP_WORDS[COMP_CWORD-1]}"
 
-    COMPREPLY=($(compgen -W "labels permissions -h -d" -- ${cur}))
+    COMPREPLY=($(compgen -W "labels permissions manifest object -h -d" -- ${cur}))
 }
 
 complete -F _sfinspect_completions sf-inspect

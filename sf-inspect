@@ -7,6 +7,8 @@
 #
 #     sf-inspect labels               # list custom-labels on local metadata, package-manifest, translation-files and usage
 #     sf-inspect permissions          # compare settings of locally managed profiles and permission-sets
+#     sf-inspect manifest             # print all name:member of package.xml to stdout
+#     sf-inspect object KEY           # get entity definition for a key-prefix
 #     sf-inspect -d DIR               # save generated csv file in DIR folder [default: .data]
 #
 # EXAMPLES
@@ -26,6 +28,11 @@ show_help() {
     | perl -pe "s/ #(.*)$/$(tput setaf 0)\1$(tput sgr 0)/" \
     | perl -pe "s/(USAGE|EXAMPLES|COMMANDS)/$(tput setaf 0)\1$(tput sgr 0)/" \
     | perl -pe "s/\`(.+)\`/$(tput sgr 0 1)\1$(tput sgr 0)/"
+  exit 1
+}
+
+print_error_and_exit() {
+  [ -n "$1" ] && echo -e >&2 "\n  $(tput setaf 1)${1}$(tput sgr0)\n"
   exit 1
 }
 
@@ -121,6 +128,9 @@ write_permissions() {
 
 target=".data"
 labels=false
+manifest=false
+object=false
+key=""
 permissions=false
 sfns="http://soap.sforce.com/2006/04/metadata"
 
@@ -134,6 +144,14 @@ while [ $# -gt 0 ]; do
       ;;
     labels)
       labels=true
+      ;;
+    manifest)
+      manifest=true
+      ;;
+    object)
+      shift
+      key=$1
+      object=true
       ;;
     permissions)
       permissions=true
@@ -234,6 +252,28 @@ if [[ $permissions == true ]]; then
   fd -e csv "permissionset_" ${target} -X rm
 
   vd "$permissionsfile"
+  exit 0
+fi
+
+if [[ $manifest == true ]]; then
+  while read type; do
+    while read member; do
+      if [[ $member = *" "* ]]; then
+        echo "\"${type}:${member}\""
+      else
+        echo "${type}:${member}"
+      fi
+    done < <(xml sel -N sf=$sfns -t -m "//sf:types[sf:name='${type}']/sf:members" -v "." -n manifest/package.xml)
+  done < <(xml sel -N sf=$sfns -t -v "//sf:Package/sf:types/sf:name" -n manifest/package.xml)
+  exit 0
+fi
+
+if [[ $object == true ]]; then
+  [ -z "$key" ] && print_error_and_exit "object key missing"
+  echo
+  sf data query -t -q "SELECT Label, QualifiedApiName FROM EntityDefinition WHERE KeyPrefix='${key}'" --json \
+    | jq -r '.result.records[] | " \u001b[0;32m'"${key}"':\u001b[0m \(.Label) \u001b[30m(API: \(.QualifiedApiName))\u001b[0m"'
+  [ -z "$key" ] && echo -e >&2 "\n $(tput setaf 1)Object key is missing$(tput sgr0)" && exit 1
   exit 0
 fi
 
