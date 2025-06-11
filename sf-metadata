@@ -26,6 +26,11 @@
 #
 #    echo '{"packageDirectories": [{"path": "force-app"}]}' > sfdx-project.json; mkdir force-app;
 #    while read name; do sf project retrieve start -m $name; done < <(sf org list metadata-types | jq -r '.metadataObjects[].xmlName')
+#
+#    while read obj; do sf sobject describe -s $obj; done < <(sf sobject list)                                        # get metadata for all Salesforce objects
+#
+#    rm /tmp/sf-metadata.sobjects                                                                                     # delete cached metadata types for bash-completion
+#
 
 yesno() {
   echo ""
