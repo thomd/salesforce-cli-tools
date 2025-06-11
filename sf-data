@@ -19,19 +19,19 @@
 #
 # EXAMPLES
 #
-#     sf-data -s Account -d .
-#     sf-data -s Account -s Contact
+#    sf-data -s Account -d .
+#    sf-data -s Account -s Contact
 #
 # COMMANDS
 #
-#     sf sobject list -s all -o ORG
+#    sf sobject list -s all -o ORG
 #
-#     sf sobject describe -s OBJECT -o ORG | jq -r '.fields[].name' | paste -sd, -
-#     sf data query -q "select FIELDS from OBJECT" -o ORG
+#    sf sobject describe -s OBJECT -o ORG | jq -r '.fields[].name' | paste -sd, -
+#    sf data query -q "select FIELDS from OBJECT" -o ORG
 #
-#     obj="Account"; sf data query -q "select $(sf sobject describe -s $obj | jq -r '.fields[].name' | paste -sd, -) from $obj" -r csv > $obj.csv
+#    obj="Account"; sf data query -q "select $(sf sobject describe -s $obj | jq -r '.fields[].name' | paste -sd, -) from $obj" -r csv > $obj.csv
 #
-#     rm /tmp/sf-data.objects                 # delete cached objects for bash-completion
+#    rm /tmp/sf-data.objects                 # delete cached objects for bash-completion
 #
 
 yesno() {
