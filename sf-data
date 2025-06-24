@@ -204,12 +204,9 @@ while read obj; do
   c=$((c+1))
   echo -e "\n $(tput setaf 8)[${c}/${total}]$(tput sgr0) $(tput setaf 4)${obj}$(tput sgr0):"
   fields=$(sf sobject describe -s ${obj} -o ${org} | jq -r '.fields[].name' \
-    | sed /MV_Minutes_Since_Modified__c/d \
-    | sed /MV_Last_login_days__c/d \
     | sed /LastActivityDate/d \
     | sed /LastViewedDate/d \
     | sed /LastReferencedDate/d \
-    | sed /MV_DaysSinceCreated__c/d \
     | paste -sd, -)
   [ "$DEBUG" == "1" ] && echo -e "\n   $(tput setaf 0)sf data query -q \"SELECT ${fields} FROM ${obj}\" -o ${org} -r csv$(tput sgr0)\n"
   sf data query -q "SELECT ${fields} FROM ${obj}" -o ${org} -r csv 2> /dev/null > ${target}/${obj}.csv
