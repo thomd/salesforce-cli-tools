@@ -82,15 +82,15 @@ if [ "$unittests" == 1 ]; then
   [ "$DEBUG" == "1" ] && echo -e "\n   $(tput setaf 0)sf project deploy validate -x manifest/package.xml -l RunSpecifiedTests \$(sf apextests list --ignore-missing-tests --no-warnings) --concise$(tput sgr0)\n"
   yesno "Validate and run Unit Tests on $(tput setaf 1)${org}$(tput sgr0) ?"
   install-sf-plugin-if-missing "apextestlist"
+  [ -d "frontend" ] && (cd frontend && echo -e "\n $(tput setaf 2)Building Frontend$(tput sgr0) ..." && npm run frontend:build >/dev/null)
   echo -e "\n $(tput setaf 2)Validate and run Unit Tests$(tput sgr0) ...\n"
-  [ -d "frontend" ] && (cd frontend && npm run frontend:build >/dev/null)
-  sf project deploy validate -x manifest/package.xml -l RunSpecifiedTests $(sf apextests list --ignore-missing-tests --no-warnings) --concise -o ${org}
+  sf project deploy validate -x manifest/package.xml -l RunSpecifiedTests $(sf apextests list --ignore-missing-tests --no-warnings) -o ${org}
 else
   [ "$DEBUG" == "1" ] && echo -e "\n   $(tput setaf 0)sf project deploy start -x manifest/package.xml -l NoTestRun --dry-run -o ${org}$(tput sgr0)\n"
   yesno "Validate on $(tput setaf 1)${org}$(tput sgr0) ?"
+  [ -d "frontend" ] && (cd frontend && echo -e "\n $(tput setaf 2)Building Frontend$(tput sgr0) ..." && npm run frontend:build >/dev/null)
   echo -e "\n $(tput setaf 2)Validate$(tput sgr0) ..."
-  [ -d "frontend" ] && (cd frontend && npm run frontend:build >/dev/null)
-  sf project deploy start -x manifest/package.xml -l NoTestRun --dry-run --concise -o ${org}
+  sf project deploy start -x manifest/package.xml -l NoTestRun --dry-run -o ${org}
 fi
 
 exit 0
