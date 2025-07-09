@@ -8,7 +8,8 @@
 #    sf-data                                         # download all data
 #    sf-data -o ORG                                  # download from ORG
 #    sf-data -d DIR                                  # save data in DIR folder [default: .data]
-#    sf-data -s OBJECT_1 -s OBJECT_2                 # download OBJECT_1 and OBJECT_2
+#    sf-data -s OBJECT                               # download OBJECT
+#    sf-data -s OBJECT -i ID                         # download only records ID of OBJECT
 #    sf-data -v OBJECT                               # download OBJECT and open in Visidata
 #
 #    sf-data -g                                      # list groups
@@ -70,6 +71,7 @@ setTargetOrg() {
 org=""
 target=".data"
 object=""
+salesforce_id=""
 visidata=0
 listfile=$(mktemp)
 group_names=""
@@ -95,6 +97,10 @@ while [ $# -gt 0 ]; do
           group_names="${group_names},${1}"
         fi
       fi
+      ;;
+    -i|--id)
+      shift
+      salesforce_id=" WHERE ID = '${1}'"
       ;;
     -G|--delete-group)
       shift
@@ -189,8 +195,8 @@ fi
 if [ "$visidata" == "1" ]; then
   echo ""
   target=$(mktemp)
-  [ "$DEBUG" == "1" ] && echo -e "   $(tput setaf 0)sf data query -q \"SELECT `sf sobject describe -o ${org} -s ${object} | jq -r '.fields[].name' | paste -sd, -` FROM ${object}\" -o ${org}$(tput sgr0)\n"
-  sf data query -q "SELECT `sf sobject describe -o ${org} -s ${object} | jq -r '.fields[].name' | paste -sd, -` FROM ${object}" -o ${org} -r csv > "${target}"
+  [ "$DEBUG" == "1" ] && echo -e "   $(tput setaf 0)sf data query -q \"SELECT `sf sobject describe -o ${org} -s ${object} | jq -r '.fields[].name' | paste -sd, -` FROM ${object} ORDER BY createdDate DESC\" -o ${org}$(tput sgr0)\n"
+  sf data query -q "SELECT `sf sobject describe -o ${org} -s ${object} | jq -r '.fields[].name' | paste -sd, -` FROM ${object} ORDER BY createdDate DESC" -o ${org} -r csv > "${target}"
   vd "${target}"
   exit 0
 fi
@@ -208,8 +214,8 @@ while read obj; do
     | sed /LastViewedDate/d \
     | sed /LastReferencedDate/d \
     | paste -sd, -)
-  [ "$DEBUG" == "1" ] && echo -e "\n   $(tput setaf 0)sf data query -q \"SELECT ${fields} FROM ${obj}\" -o ${org} -r csv$(tput sgr0)\n"
-  sf data query -q "SELECT ${fields} FROM ${obj}" -o ${org} -r csv 2> /dev/null > ${target}/${obj}.csv
+  [ "$DEBUG" == "1" ] && echo -e "\n   $(tput setaf 0)sf data query -q \"SELECT ${fields} FROM ${obj} ORDER BY createdDate DESC\" -o ${org} -r csv$(tput sgr0)\n"
+  sf data query -q "SELECT ${fields} FROM ${obj} ORDER BY createdDate DESC" -o ${org} -r csv 2> /dev/null > ${target}/${obj}.csv
   dataSize=$(csvtk nrow ${target}/${obj}.csv)
   if [ $dataSize == '0' ]; then
     echo -e " ${target}/${obj}: $(tput setaf 1)empty$(tput sgr0)"
