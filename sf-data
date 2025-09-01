@@ -7,10 +7,11 @@
 #
 #    sf-data                                         # download all data
 #    sf-data -o ORG                                  # download from ORG
-#    sf-data -d DIR                                  # save data in DIR folder [default: .data]
+#    sf-data -d DIR                                  # save data in DIR folder [default: .data]. Can not be set if you are in the default folder
 #    sf-data -s OBJECT                               # download OBJECT
 #    sf-data -s OBJECT -i ID                         # download only records ID of OBJECT
 #    sf-data -v OBJECT                               # download OBJECT and open in Visidata
+#    sf-data -x                                      # download data without time-related system fields
 #
 #    sf-data -g                                      # list groups
 #    sf-data -s OBJECT_1 -s OBJECT_2 -g GROUP        # download OBJECT_1 and OBJECT_2 and store object names in group GROUP
@@ -69,7 +70,8 @@ setTargetOrg() {
 }
 
 org=""
-target=".data"
+default_target=".data"
+target=$default_target
 object=""
 salesforce_id=""
 visidata=0
@@ -134,6 +136,10 @@ while [ $# -gt 0 ]; do
 done
 setTargetOrg
 
+if [ $(basename $(pwd)) == $default_target ]; then
+  target='.'
+fi
+
 [ "$DEBUG" == "2" ] && echo -e "\norg: "$org"\ntarget: "$target"\nobject: "$object"\nvisidata: "$visidata"\ngroup_names: "$group_names"\nlist_groups: "$list_groups"\ndelete_group: "$delete_group"\n" | column -t && exit 0
 
 # sf-data -g
@@ -195,8 +201,10 @@ fi
 if [ "$visidata" == "1" ]; then
   echo ""
   target=$(mktemp)
-  [ "$DEBUG" == "1" ] && echo -e "   $(tput setaf 0)sf data query -q \"SELECT `sf sobject describe -o ${org} -s ${object} | jq -r '.fields[].name' | paste -sd, -` FROM ${object} ORDER BY createdDate DESC\" -o ${org}$(tput sgr0)\n"
-  sf data query -q "SELECT `sf sobject describe -o ${org} -s ${object} | jq -r '.fields[].name' | paste -sd, -` FROM ${object} ORDER BY createdDate DESC" -o ${org} -r csv > "${target}"
+  fields_json=$(sf sobject describe -s ${obj} -o ${org})
+  fields=$(echo "$fields_json" | jq -r '.fields[].name' | paste -sd, -)
+  order_by=$(echo "$fields_json" | jq -r '.fields[] | select(.name == "CreatedDate") | " ORDER BY \(.name) DESC"')
+  sf data query -q "SELECT ${fields} FROM ${object}${order_by}" -o ${org} -r csv > "${target}"
   vd "${target}"
   exit 0
 fi
@@ -209,13 +217,11 @@ startTime=$(date +%s)
 while read obj; do
   c=$((c+1))
   echo -e "\n $(tput setaf 8)[${c}/${total}]$(tput sgr0) $(tput setaf 4)${obj}$(tput sgr0):"
-  fields=$(sf sobject describe -s ${obj} -o ${org} | jq -r '.fields[].name' \
-    | sed /LastActivityDate/d \
-    | sed /LastViewedDate/d \
-    | sed /LastReferencedDate/d \
-    | paste -sd, -)
-  [ "$DEBUG" == "1" ] && echo -e "\n   $(tput setaf 0)sf data query -q \"SELECT ${fields} FROM ${obj} ORDER BY createdDate DESC\" -o ${org} -r csv$(tput sgr0)\n"
-  sf data query -q "SELECT ${fields} FROM ${obj} ORDER BY createdDate DESC" -o ${org} -r csv 2> /dev/null > ${target}/${obj}.csv
+  fields_json=$(sf sobject describe -s ${obj} -o ${org})
+  fields=$(echo "$fields_json" | jq -r '.fields[].name' | paste -sd, -)
+  order_by=$(echo "$fields_json" | jq -r '.fields[] | select(.name == "CreatedDate") | " ORDER BY \(.name) DESC"')
+  [ "$DEBUG" == "1" ] && echo -e "\n   $(tput setaf 0)sf data query -q \"SELECT ${fields} FROM ${obj}${order_by}\" -o ${org} -r csv$(tput sgr0)\n"
+  sf data query -q "SELECT ${fields} FROM ${obj}${order_by}" -o ${org} -r csv 2> /dev/null > ${target}/${obj}.csv
   dataSize=$(csvtk nrow ${target}/${obj}.csv)
   if [ $dataSize == '0' ]; then
     echo -e " ${target}/${obj}: $(tput setaf 1)empty$(tput sgr0)"
