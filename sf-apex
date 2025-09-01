@@ -6,7 +6,8 @@
 # USAGE
 #
 #    sf-apex "CODE"                                        # execute CODE
-#    sf-apex -o ORG                                        # execute Apex code on ORG
+#    sf-apex -o ORG "CODE"                                 # execute Apex code on ORG
+#    sf-apex -y "CODE"                                     # execute without prompt
 #
 # EXAMPLES
 #
@@ -54,12 +55,16 @@ setTargetOrg() {
 org=""
 code=""
 codefile=$(mktemp)
+no_prompt=0
 
 while [ $# -gt 0 ]; do
   case $1 in
     -o|--org)
       shift
       org=$1
+      ;;
+    -y|--yes)
+      no_prompt=1
       ;;
     -h|--help)
       show_help
@@ -75,8 +80,9 @@ setTargetOrg
 
 [ -z "$code" ] && show_help "Apex code missing"
 
-[ "$DEBUG" == "1" ] && echo -e "\n   $(tput setaf 0)sf apex run -f ${codefile} -o ${org}$(tput sgr0)\n"
-yesno " Execute Apex code $(tput setaf 0)${code}$(tput sgr0) on $(tput setaf 1)${org}$(tput sgr0) ?"
+[ "$DEBUG" == "1" ] && echo -e "\n  $(tput setaf 0)${code}$(tput sgr0)\n"
+[ "$DEBUG" == "2" ] && echo -e "\n  $(tput setaf 0)sf apex run -f ${codefile} -o ${org}$(tput sgr0)\n"
+[ "$no_prompt" == 0 ] && yesno " Execute Apex code $(tput setaf 0)${code}$(tput sgr0) on $(tput setaf 1)${org}$(tput sgr0) ?"
 echo "${code}" > "$codefile"
 sf apex run -f "$codefile" -o "$org" >/dev/null
 exit 0
