@@ -6,9 +6,11 @@
 # USAGE
 #
 #     sf-inspect labels               # list custom-labels on local metadata, package-manifest, translation-files and usage
-#     sf-inspect permissions          # compare settings of locally managed profiles and permission-sets
+#     sf-inspect permissions          # compare settings of local profiles and local permission-sets
 #     sf-inspect manifest             # print all name:member of package.xml to stdout
-#     sf-inspect object KEY           # get entity definition for a key-prefix
+#     sf-inspect object KEY           # get entity definition for a key-prefix KEY
+#     sf-inspect record-count         # list record counts for all objects
+#
 #     sf-inspect -d DIR               # save generated csv file in DIR folder [default: .data]
 #
 # EXAMPLES
@@ -126,12 +128,27 @@ write_permissions() {
   esac
 }
 
+setTargetOrg() {
+  if [[ -z "$org" ]]; then
+    org=$(cat .sf/config.json 2>/dev/null | jq -r '."target-org" | select( . != null )')
+  fi
+  if [[ -z "$org" ]]; then
+    org=$(cat ~/.sf/config.json 2>/dev/null | jq -r '."target-org" | select( . != null )')
+  fi
+  if [[ -z "$org" ]]; then
+    echo -e >&2 "\n $(tput setaf 1)Missing target org$(tput sgr 0)\n\n   Either provide with $(tput setaf 0)-o$(tput sgr 0) option, or set via $(tput setaf 0)sf config set target-org <org>$(tput sgr 0)"
+    exit 1
+  fi
+}
+
 target=".data"
+org=""
 labels=false
 manifest=false
 object=false
 key=""
 permissions=false
+record_count=false
 sfns="http://soap.sforce.com/2006/04/metadata"
 
 [[ -z "$1" ]] && show_help
@@ -156,6 +173,9 @@ while [ $# -gt 0 ]; do
     permissions)
       permissions=true
       ;;
+    record-count)
+      record_count=true
+      ;;
     -h|--help)
       show_help
       ;;
@@ -164,9 +184,12 @@ while [ $# -gt 0 ]; do
   esac
   shift
 done
+setTargetOrg
+
 [[ ! -f "./sfdx-project.json" && ($labels == true || $permissions == true) ]] && echo -e >&2 "\n $(tput setaf 1)not a SFDX project$(tput sgr0)" && exit 1
 mkdir -p "$target"
 
+# sf-inspect labels
 if [[ $labels == true ]]; then
   yesno " Inspect $(tput setaf 4)custom-labels$(tput sgr0) and $(tput setaf 4)translations$(tput sgr0) of local $(tput setaf 1)SFDX project$(tput sgr0) ?"
   [ ! -d "./force-app/main/default/labels" ] && echo -e >&2 "\n $(tput setaf 1)Project has no custom labels$(tput sgr0)" && exit 1
@@ -222,6 +245,7 @@ if [[ $labels == true ]]; then
   exit 0
 fi
 
+# sf-inspect permissions
 if [[ $permissions == true ]]; then
   yesno " Inspect $(tput setaf 4)Profiles$(tput sgr0) and $(tput setaf 4)Permission Sets$(tput sgr0) of local $(tput setaf 1)SFDX project$(tput sgr0) ?"
 
@@ -255,6 +279,7 @@ if [[ $permissions == true ]]; then
   exit 0
 fi
 
+# sf-inspect mainfest
 if [[ $manifest == true ]]; then
   while read type; do
     while read member; do
@@ -268,12 +293,25 @@ if [[ $manifest == true ]]; then
   exit 0
 fi
 
+# sf-inspect object KEY
 if [[ $object == true ]]; then
   [ -z "$key" ] && print_error_and_exit "object key missing"
   echo
   sf data query -t -q "SELECT Label, QualifiedApiName FROM EntityDefinition WHERE KeyPrefix='${key}'" --json \
     | jq -r '.result.records[] | " \u001b[0;32m'"${key}"':\u001b[0m \(.Label) \u001b[30m(API: \(.QualifiedApiName))\u001b[0m"'
   [ -z "$key" ] && echo -e >&2 "\n $(tput setaf 1)Object key is missing$(tput sgr0)" && exit 1
+  exit 0
+fi
+
+# sf-inspect record-count
+if [ "$record_count" == true ]; then
+  orgdata=$(sf org display -o ${org} --json)
+  instanceUrl=$(jq -r '.result.instanceUrl' <<< "${orgdata}")
+  accessToken=$(jq -r '.result.accessToken' <<< "${orgdata}")
+  apiVersion=$(jq -r '.result.apiVersion' <<< "${orgdata}")
+
+  [ "$DEBUG" == "1" ] && echo -e "\n   $(tput setaf 0)curl -s -H \"Authorization: Bearer ${accessToken}\" \"${instanceUrl}/services/data/v${apiVersion}/limits/recordCount\"$(tput sgr0)\n"
+  curl -s -H "Authorization: Bearer ${accessToken}" "${instanceUrl}/services/data/v${apiVersion}/limits/recordCount" | jq -r '.sObjects[] | [.name, .count] | @csv'
   exit 0
 fi
 
