@@ -167,3 +167,4 @@ while read name; do
   sf project retrieve start -o "$org" -m "$name" > /dev/null
 done < <(cat "$names_list")
 
+# TODO icdiff <(sf org list metadata-types --api-version 62.0 --json) <(sf org list metadata-types --api-version 63.0 --json)

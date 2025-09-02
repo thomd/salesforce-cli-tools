@@ -201,7 +201,7 @@ fi
 if [ "$visidata" == "1" ]; then
   echo ""
   target=$(mktemp)
-  fields_json=$(sf sobject describe -s ${obj} -o ${org})
+  fields_json=$(sf sobject describe -s ${object} -o ${org})
   fields=$(echo "$fields_json" | jq -r '.fields[].name' | paste -sd, -)
   order_by=$(echo "$fields_json" | jq -r '.fields[] | select(.name == "CreatedDate") | " ORDER BY \(.name) DESC"')
   sf data query -q "SELECT ${fields} FROM ${object}${order_by}" -o ${org} -r csv > "${target}"
