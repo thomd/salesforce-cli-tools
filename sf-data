@@ -224,12 +224,12 @@ while read obj; do
   sf data query -q "SELECT ${fields} FROM ${obj}${order_by}" -o ${org} -r csv 2> /dev/null > ${target}/${obj}.csv
   dataSize=$(csvtk nrow ${target}/${obj}.csv)
   if [ $dataSize == '0' ]; then
-    echo -e " ${target}/${obj}: $(tput setaf 1)empty$(tput sgr0)"
+    echo -e " ${target}/${obj}.csv: $(tput setaf 1)empty$(tput sgr0)"
   else
     if [[ $dataSize == '1' ]]; then
-      echo -e " ${target}/${obj}: $(tput setaf 2)1 record$(tput sgr0)"
+      echo -e " ${target}/${obj}.csv: $(tput setaf 2)1 record$(tput sgr0)"
     else
-      echo -e " ${target}/${obj}: $(tput setaf 2)${dataSize} records$(tput sgr0)"
+      echo -e " ${target}/${obj}.csv: $(tput setaf 2)${dataSize} records$(tput sgr0)"
     fi
   fi
   find ${target}/${obj}.csv -type f -size -2c -delete
