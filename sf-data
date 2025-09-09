@@ -51,10 +51,11 @@ show_help() {
   exit 1
 }
 
-error_and_exit() {
-  echo -e >&2 "\n $(tput setaf 1)$@$(tput sgr0)\n"
+print_error_and_exit() {
+  [ -n "$1" ] && echo -e >&2 "\n  $(tput setaf 1)${1}$(tput sgr0)\n"
   exit 1
 }
+
 
 setTargetOrg() {
   if [[ -z "$org" ]]; then
@@ -162,7 +163,7 @@ fi
 # sf-data -G NAME
 if [ "$delete_group" == "1" ] && [ -n "$group_names" ]; then
   yesno "Delete group $(tput setaf 4)${group_names}$(tput sgr0) ?"
-  [ ! -f "${group_folder}/${group_names}" ] && error_and_exit "Group '${group_names}' does not exist"
+  [ ! -f "${group_folder}/${group_names}" ] && print_error_and_exit "Group '${group_names}' does not exist"
   rm "${group_folder}/${group_names}"
   exit 0
 fi
@@ -177,7 +178,7 @@ fi
 # sf-data -g GROUP
 if [ -z "$object" ] && [ "$list_groups" == "0" ] && [ -n "$group_names" ]; then
   while read -r group; do
-    [ ! -f "${group_folder}/${group}" ] && error_and_exit "Group '${group}' does not exist"
+    [ ! -f "${group_folder}/${group}" ] && print_error_and_exit "Group '${group}' does not exist"
     cat "${group_folder}/${group}" >> "$listfile"
   done < <(echo "$group_names" | tr -d ' ' | tr ',' '\n')
   yesno "Fetch $(cat "$listfile" | perl -pe 's/\n/, /g' | perl -pe 's/, $//' | perl -pe "s/(\w+)/$(tput setaf 4)\1$(tput sgr0)/g") data from $(tput setaf 1)${org}$(tput sgr0) ?"
@@ -200,6 +201,7 @@ fi
 
 if [ "$visidata" == "1" ]; then
   echo ""
+  [ "$object" == "ContentDocumentLink" ] && print_error_and_exit "ContentDocumentLink requires a filter by a single Id on ContentDocumentId or LinkedEntityId using the equals operator or multiple Id's using the IN operator."
   target=$(mktemp)
   fields_json=$(sf sobject describe -s ${object} -o ${org})
   fields=$(echo "$fields_json" | jq -r '.fields[].name' | paste -sd, -)
@@ -217,6 +219,7 @@ startTime=$(date +%s)
 while read obj; do
   c=$((c+1))
   echo -e "\n $(tput setaf 8)[${c}/${total}]$(tput sgr0) $(tput setaf 4)${obj}$(tput sgr0):"
+  [ "$obj" == "ContentDocumentLink" ] && print_error_and_exit "ContentDocumentLink requires a filter by a single Id on ContentDocumentId or LinkedEntityId using the equals operator or multiple Id's using the IN operator."
   fields_json=$(sf sobject describe -s ${obj} -o ${org})
   fields=$(echo "$fields_json" | jq -r '.fields[].name' | paste -sd, -)
   order_by=$(echo "$fields_json" | jq -r '.fields[] | select(.name == "CreatedDate") | " ORDER BY \(.name) DESC"')
