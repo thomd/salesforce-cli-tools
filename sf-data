@@ -56,6 +56,9 @@ print_error_and_exit() {
   exit 1
 }
 
+print_warning_and_continue() {
+  [ -n "$1" ] && echo -e >&2 "\n  $(tput setaf 3)${1}$(tput sgr0)\n"
+}
 
 setTargetOrg() {
   if [[ -z "$org" ]]; then
@@ -201,7 +204,7 @@ fi
 
 if [ "$visidata" == "1" ]; then
   echo ""
-  [ "$object" == "ContentDocumentLink" ] && print_error_and_exit "ContentDocumentLink requires a filter by a single Id on ContentDocumentId or LinkedEntityId using the equals operator or multiple Id's using the IN operator."
+  [ "$object" == "ContentDocumentLink" ] && print_warning_and_continue "ContentDocumentLink requires a filter by a single Id on ContentDocumentId or LinkedEntityId using the equals operator or multiple Id's using the IN operator."
   target=$(mktemp)
   fields_json=$(sf sobject describe -s ${object} -o ${org})
   fields=$(echo "$fields_json" | jq -r '.fields[].name' | paste -sd, -)
@@ -219,7 +222,7 @@ startTime=$(date +%s)
 while read obj; do
   c=$((c+1))
   echo -e "\n $(tput setaf 8)[${c}/${total}]$(tput sgr0) $(tput setaf 4)${obj}$(tput sgr0):"
-  [ "$obj" == "ContentDocumentLink" ] && print_error_and_exit "ContentDocumentLink requires a filter by a single Id on ContentDocumentId or LinkedEntityId using the equals operator or multiple Id's using the IN operator."
+  [ "$obj" == "ContentDocumentLink" ] && print_warning_and_continue "ContentDocumentLink requires a filter by a single Id on ContentDocumentId or LinkedEntityId using the equals operator or multiple Id's using the IN operator."
   fields_json=$(sf sobject describe -s ${obj} -o ${org})
   fields=$(echo "$fields_json" | jq -r '.fields[].name' | paste -sd, -)
   order_by=$(echo "$fields_json" | jq -r '.fields[] | select(.name == "CreatedDate") | " ORDER BY \(.name) DESC"')
